@@ -23,8 +23,10 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
+    {/* ico 는 16·32·48 을 함께 품는다. 브라우저가 탭 크기에 맞는 것을 고른다 */}
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
