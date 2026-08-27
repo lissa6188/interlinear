@@ -7,5 +7,11 @@
   "assets": {
     // astro build 산출물. public/_headers 도 여기로 복사되어 그대로 적용된다
     "directory": "./dist"
-  }
+  },
+  // 커스텀 도메인을 대시보드가 아니라 여기서 선언한다. 배포될 때마다 이 상태로
+  // 맞춰지므로, 사람이 화면에서 만진 것과 저장소가 어긋날 일이 없다.
+  // 네임서버가 이미 Cloudflare 이므로 DNS 레코드·인증서는 자동으로 잡힌다.
+  "routes": [
+    { "pattern": "interlinear.work", "custom_domain": true }
+  ]
 }
