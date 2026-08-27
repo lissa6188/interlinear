@@ -1,0 +1,40 @@
+---
+import TagList from './TagList.astro';
+import type { Note } from '../lib/notes';
+
+interface Props {
+  note: Note;
+}
+
+const { note } = Astro.props;
+
+// 썸네일이 있으면 날짜 자리를 이미지가 쓰고, 날짜는 제목 위로 올라간다
+const hasThumb = Boolean(note.thumbnail);
+---
+
+<li class:list={['row', hasThumb && 'row-thumbed']}>
+  {
+    hasThumb ? (
+      <a class="row-thumb" href={note.href} aria-hidden="true" tabindex="-1">
+        <img src={note.thumbnail} alt="" loading="lazy" decoding="async" />
+      </a>
+    ) : (
+      <time class="row-date mono" datetime={note.isoDate}>
+        {note.shortDate}
+      </time>
+    )
+  }
+  <div class="row-main">
+    {
+      hasThumb && (
+        <time class="row-meta mono" datetime={note.isoDate}>
+          {note.shortDate}
+        </time>
+      )
+    }
+    <a class="row-t" href={note.href}><span>{note.title}</span></a>
+    <p class="row-d">{note.description}</p>
+    <TagList tags={note.tags} class="row-tags" />
+  </div>
+  <span class="row-min mono">{note.minutes} min</span>
+</li>

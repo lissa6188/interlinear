@@ -1,0 +1,53 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NoteRow from '../../components/NoteRow.astro';
+import { getStudies } from '../../lib/notes';
+import { SITE } from '../../lib/site';
+
+const studies = await getStudies();
+---
+
+<BaseLayout
+  title="스터디"
+  description="새 기능을 직접 돌려보고 화면을 따라가며 정리한 실습 기록입니다."
+>
+  <main class="wrap" id="main">
+    <div class="sheet-list">
+      <header class="page-head">
+        <h1 class="page-t">스터디</h1>
+        <p class="page-lede">
+          새로 나온 기능을 실제로 돌려보고, 화면을 따라가며 정리한 기록입니다. 글마다 캡처 화면과
+          그 화면에서 볼 지점을 나란히 놓았습니다.
+        </p>
+      </header>
+
+      <section class="group">
+        <div class="group-h">
+          <h2 class="group-t">실습 기록</h2>
+          <span class="group-count mono">{studies.length}편</span>
+        </div>
+        {
+          studies.length > 0 ? (
+            <ul class="rows">
+              {studies.map((study) => (
+                <NoteRow note={study} />
+              ))}
+            </ul>
+          ) : (
+            <p class="rows-empty">아직 올린 글이 없습니다.</p>
+          )
+        }
+      </section>
+
+      <section class="contact">
+        <h2>대신 해주기</h2>
+        <p>
+          직접 돌려봐 주었으면 하는 기능이 있으면 메일로 알려주세요. 순서를 정할 때 참고합니다.
+        </p>
+        <a class="contact-mail" href={`mailto:${SITE.email}?subject=${encodeURIComponent('스터디 제안')}`}>
+          {SITE.email}
+        </a>
+      </section>
+    </div>
+  </main>
+</BaseLayout>

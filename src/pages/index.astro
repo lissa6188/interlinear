@@ -1,0 +1,182 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Coverage from '../components/Coverage.astro';
+import SearchHero from '../components/SearchHero.astro';
+import NoteCard from '../components/NoteCard.astro';
+import { getAll, topTags } from '../lib/notes';
+import { SITE } from '../lib/site';
+import { graph, person, website, PERSON_ID, SITE_ID } from '../lib/jsonld';
+
+// 홈은 노트와 스터디를 한자리에 모아 보여준다
+const notes = await getAll();
+const hints = topTags(notes);
+
+const jsonLd = graph(person(), website(), {
+  '@type': 'Blog',
+  '@id': `${SITE.url}/#blog`,
+  name: `${SITE.name} 노트`,
+  url: `${SITE.url}/`,
+  inLanguage: 'ko',
+  isPartOf: { '@id': SITE_ID },
+  author: { '@id': PERSON_ID },
+  about: [...SITE.knowsAbout],
+  blogPost: notes.map((note) => ({
+    '@type': 'BlogPosting',
+    '@id': `${SITE.url}${note.href}#post`,
+    headline: note.title,
+    description: note.description,
+    url: `${SITE.url}${note.href}`,
+    datePublished: note.isoDate,
+    dateModified: note.updatedIso,
+    keywords: note.tags.join(', '),
+  })),
+});
+---
+
+<BaseLayout>
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+
+  <Coverage />
+  <SearchHero hints={hints} />
+
+  <main class="wrap" id="main">
+    <div class="grid-h">
+      <h1 class="mono">전체</h1>
+      <span class="count mono" id="count">{notes.length}편</span>
+      <div class="sort">
+        <button id="sort-new" type="button" aria-pressed="true">최신순</button>
+        <button id="sort-name" type="button" aria-pressed="false">가나다순</button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid" aria-live="polite">
+      {notes.map((note) => <NoteCard note={note} />)}
+      <div class="empty" id="empty" hidden>
+        <b>&ldquo;<span id="empty-term"></span>&rdquo;에 맞는 노트가 없습니다.</b>
+        다른 단어로 검색해 보세요.
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  // @ts-nocheck — 이 블록은 의도적으로 순수 자바스크립트다.
+  // 편집기가 TypeScript 로 검사하면 DOM 조회마다 null 검사·형변환이 붙어
+  // 스무 줄짜리 검색 코드가 읽기 어려워진다. 빌드에는 영향이 없다.
+  import { tokenize, matches, highlight, snippet } from '../lib/search';
+
+  const input = document.getElementById('q');
+  const clearBtn = document.getElementById('clear');
+  const grid = document.getElementById('grid');
+  const countEl = document.getElementById('count');
+  const emptyEl = document.getElementById('empty');
+  const emptyTerm = document.getElementById('empty-term');
+  const sortNew = document.getElementById('sort-new');
+  const sortName = document.getElementById('sort-name');
+
+  const cards = Array.from(grid.querySelectorAll('[data-note]'));
+
+  // 하이라이트는 innerHTML을 덮어쓴다. 원본 텍스트를 미리 읽어두지 않으면
+  // 두 번째 검색부터 <mark> 태그가 섞인 문자열을 다시 훑게 된다.
+  const targets = cards.map((card) =>
+    Array.from(card.querySelectorAll('[data-hl]')).map((el) => ({
+      el,
+      text: el.textContent || '',
+    }))
+  );
+
+  // 본문은 원문 그대로 한 벌만 실려 온다. 매칭용 소문자 색인은 여기서 한 번만 만든다.
+  const index = cards.map((card, i) => {
+    const body = card.dataset.body || '';
+    return {
+      body,
+      // 카드에 눈으로 보이는 글(제목·요약). 하이라이트가 뜰 수 있는 범위다
+      shown: targets[i].map((t) => t.text).join(' ').toLowerCase(),
+      haystack: (card.dataset.haystack || '') + ' ' + body.toLowerCase(),
+      snippetWrap: card.querySelector('[data-snippet-wrap]'),
+      snippetEl: card.querySelector('[data-snippet]'),
+    };
+  });
+
+  function render() {
+    const tokens = tokenize(input.value);
+    let visible = 0;
+
+    cards.forEach((card, i) => {
+      const entry = index[i];
+      const hit = matches(entry.haystack, tokens);
+      card.hidden = !hit;
+      if (!hit) return;
+      visible += 1;
+      targets[i].forEach((target) => {
+        target.el.innerHTML = highlight(target.text, tokens);
+      });
+
+      // 제목·요약에 안 보이는 검색어가 있으면 본문에서 걸린 자리를 근거로 붙인다.
+      // 하이라이트가 하나도 없는 카드는 방문자 눈에 오작동으로 보이기 때문이다.
+      const unseen = tokens.filter((token) => !entry.shown.includes(token));
+      const found = unseen.length ? snippet(entry.body, unseen) : null;
+      if (found) entry.snippetEl.innerHTML = highlight(found, tokens);
+      entry.snippetWrap.hidden = !found;
+    });
+
+    countEl.textContent = visible + '편';
+    emptyEl.hidden = visible > 0;
+    emptyTerm.textContent = input.value.trim();
+    clearBtn.classList.toggle('show', input.value.length > 0);
+  }
+
+  function setQuery(value, focus) {
+    input.value = value;
+    render();
+
+    // 검색 상태를 주소에 남긴다 — 필터된 목록을 그대로 링크로 줄 수 있다
+    const url = new URL(window.location.href);
+    if (value.trim()) url.searchParams.set('q', value.trim());
+    else url.searchParams.delete('q');
+    window.history.replaceState(null, '', url);
+
+    if (focus) input.focus();
+  }
+
+  function setSort(mode) {
+    sortNew.setAttribute('aria-pressed', String(mode === 'new'));
+    sortName.setAttribute('aria-pressed', String(mode === 'name'));
+
+    const sorted = cards.slice().sort((a, b) =>
+      mode === 'new'
+        ? b.dataset.date.localeCompare(a.dataset.date)
+        : a.dataset.title.localeCompare(b.dataset.title, 'ko')
+    );
+    // 빈 상태 안내는 항상 마지막에 오도록 같이 넘긴다
+    grid.append(...sorted, emptyEl);
+  }
+
+  input.addEventListener('input', () => setQuery(input.value, false));
+  clearBtn.addEventListener('click', () => setQuery('', true));
+  sortNew.addEventListener('click', () => setSort('new'));
+  sortName.addEventListener('click', () => setSort('name'));
+
+  // 태그 칩은 링크(/?q=태그)지만 이 페이지에서는 이동 없이 검색어로 넣는다
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const chip = event.target.closest('[data-tag]');
+    if (!chip) return;
+    event.preventDefault();
+    setQuery(chip.dataset.tag, false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === '/' && document.activeElement !== input) {
+      event.preventDefault();
+      input.focus();
+    }
+    if (event.key === 'Escape' && document.activeElement === input) setQuery('', false);
+  });
+
+  // /?q=... 로 들어왔거나 브라우저가 입력값을 복원한 경우를 모두 처리한다
+  const initial = new URL(window.location.href).searchParams.get('q');
+  if (initial) input.value = initial;
+  render();
+</script>

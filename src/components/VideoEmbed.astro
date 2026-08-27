@@ -1,0 +1,59 @@
+---
+import { parseVideo } from '../lib/video';
+
+interface Props {
+  src: string;
+  /** iframe 에 붙는 이름. 화면 낭독기 사용자가 이걸로 무슨 영상인지 판단한다 */
+  title: string;
+}
+
+const { src, title } = Astro.props;
+const video = parseVideo(src);
+
+// 알아보지 못하는 주소를 조용히 버리면 글에 영상이 빠진 걸 아무도 모른다.
+// 빌드 로그에 남기고, 화면에는 최소한 링크라도 보여준다.
+if (video.kind === 'unknown') {
+  console.warn(`[VideoEmbed] ${video.reason}: ${video.src}`);
+}
+
+const IFRAME_ALLOW =
+  'accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+---
+
+{
+  (video.kind === 'youtube' || video.kind === 'vimeo') && (
+    <div class="video">
+      <iframe
+        src={video.embedUrl}
+        title={title}
+        loading="lazy"
+        allow={IFRAME_ALLOW}
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      />
+    </div>
+  )
+}
+
+{
+  video.kind === 'file' && (
+    <div class="video">
+      <video src={video.src} title={title} controls preload="metadata" playsinline />
+    </div>
+  )
+}
+
+{
+  video.kind === 'unknown' && (
+    <p class="video-fallback">
+      {/* 개발 중에만 원인을 알려준다. 배포본에는 링크만 남는다 */}
+      {import.meta.env.DEV && (
+        <b class="video-warn">
+          {video.reason}. 머리말 <code>video:</code> 에 유튜브 영상 페이지 주소를 넣으세요 — 예:
+          https://www.youtube.com/watch?v=wGBHAclqhG8
+        </b>
+      )}
+      영상 보기: <a href={video.src}>{video.src}</a>
+    </p>
+  )
+}

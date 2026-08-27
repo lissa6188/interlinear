@@ -1,0 +1,34 @@
+---
+import TagList from './TagList.astro';
+import { KIND_LABEL, type Note } from '../lib/notes';
+
+interface Props {
+  note: Note;
+}
+
+const { note } = Astro.props;
+---
+
+<article
+  class="card"
+  data-note
+  data-haystack={note.haystack}
+  data-body={note.bodyText}
+  data-date={note.isoDate}
+  data-title={note.title}
+>
+  <div class="card-top">
+    <span class:list={['card-kind', `card-kind-${note.kind}`]}>{KIND_LABEL[note.kind]}</span>
+    <time class="card-date" datetime={note.isoDate}>{note.shortDate}</time>
+    <span class="card-min">{note.minutes} min</span>
+  </div>
+  <a href={note.href}>
+    <h3 class="card-t"><span data-hl>{note.title}</span></h3>
+  </a>
+  <p class="card-d" data-hl>{note.description}</p>
+  {/* 제목·요약에 없는 단어로 검색했을 때만 스크립트가 채우고 펼친다 */}
+  <p class="card-snippet" data-snippet-wrap hidden>
+    <span class="card-snippet-label">본문</span><span data-snippet></span>
+  </p>
+  <TagList tags={note.tags} />
+</article>

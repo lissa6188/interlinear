@@ -1,0 +1,12 @@
+---
+import { SITE } from '../lib/site';
+---
+
+<footer class="foot">
+  <div class="foot-in mono">
+    <span>{SITE.domain}</span>
+    <span>—</span>
+    <span>{SITE.author}</span>
+    <a class="foot-end" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+  </div>
+</footer>

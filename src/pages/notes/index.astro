@@ -1,0 +1,45 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import NoteRow from '../../components/NoteRow.astro';
+import { getNotes, groupByCategory } from '../../lib/notes';
+
+const notes = await getNotes();
+const groups = groupByCategory(notes);
+---
+
+<BaseLayout
+  title="노트"
+  description="Dynamics 365 CRM · Microsoft Fabric · Power Platform 실무에서 확인한 것을 제품별로 모았습니다."
+>
+  <main class="wrap" id="main">
+    <div class="sheet-list">
+      <header class="page-head">
+        <h1 class="page-t">노트</h1>
+        {/* 태그 앞에서 줄을 바꾸면 Astro 가 공백을 지운다. 링크는 같은 줄에 붙여 쓴다 */}
+        <p class="page-lede">
+          실무에서 직접 확인한 것만 제품별로 모았습니다. 전체를 한 번에 훑거나 검색하려면 <a href="/">홈</a>으로 가세요.
+        </p>
+      </header>
+
+      {
+        groups.map((group) => (
+          <section class="group">
+            <div class="group-h">
+              <h2 class="group-t">{group.name}</h2>
+              <span class="group-count mono">{group.notes.length}편</span>
+            </div>
+            {group.notes.length > 0 ? (
+              <ul class="rows">
+                {group.notes.map((note) => (
+                  <NoteRow note={note} />
+                ))}
+              </ul>
+            ) : (
+              <p class="rows-empty">아직 올린 글이 없습니다.</p>
+            )}
+          </section>
+        ))
+      }
+    </div>
+  </main>
+</BaseLayout>

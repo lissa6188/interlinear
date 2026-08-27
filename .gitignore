@@ -1,0 +1,30 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# playwright 스크린샷 임시 폴더
+.playwright-mcp/
+
+# 작업 일지 — 개인 연락처가 들어 있어 저장소에 올리지 않는다
+PlanUpdate.md

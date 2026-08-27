@@ -1,0 +1,28 @@
+---
+import { NAV, TAGLINES } from '../lib/site';
+
+const path = Astro.url.pathname;
+
+// 홈은 정확히 일치할 때만. 나머지는 하위 글 페이지(/notes/xxx/)에서도 켜진다.
+function isCurrent(href: string): boolean {
+  return href === '/' ? path === '/' : path.startsWith(href);
+}
+---
+
+<header class="masthead">
+  <div class="masthead-in">
+    <a href="/" class="wordmark">inter<span>linear</span></a>
+    <p class="tagline">
+      {TAGLINES.map((line) => <span>{line}</span>)}
+    </p>
+    <nav class="masthead-end mono" aria-label="주요 메뉴">
+      {
+        NAV.map((item) => (
+          <a href={item.href} aria-current={isCurrent(item.href) ? 'page' : undefined}>
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+  </div>
+</header>

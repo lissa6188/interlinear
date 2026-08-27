@@ -1,0 +1,17 @@
+# Cloudflare Pages 가 이 파일을 읽어 응답 헤더를 붙인다.
+# public/ 안에 두면 빌드 때 dist/ 루트로 그대로 복사된다.
+#
+# 로그인·폼·DB 가 없는 정적 사이트라 실질 공격면은 작다.
+# 여기 있는 것은 "뚫릴 구석을 막는다"기보다 기본 위생에 가깝다.
+
+/*
+  # HTTPS 로만 접속. preload 는 브라우저 목록 등재 신청을 한 뒤에 의미가 생긴다
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # 선언된 Content-Type 을 브라우저가 멋대로 추측하지 않게 한다
+  X-Content-Type-Options: nosniff
+  # 외부로 나갈 때 경로·쿼리를 빼고 도메인만 넘긴다. 검색어(?q=)가 새어나가지 않도록
+  Referrer-Policy: strict-origin-when-cross-origin
+  # 이 사이트를 프레임에 넣지 못하게. 이 사이트가 유튜브를 품는 것과는 방향이 반대라 무관하다
+  X-Frame-Options: DENY
+  # 쓰지 않는 브라우저 권한은 처음부터 닫아 둔다
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()

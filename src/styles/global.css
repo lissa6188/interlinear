@@ -1,0 +1,550 @@
+/* interlinear.work — 목업(interlinear.html)에서 확정된 스타일 */
+
+:root{
+  --paper:#FFFFFF;
+  --paper-2:#F7F7F7;
+  --ink:#0A0A0A;
+  --ink-2:#454545;
+  --gray:#8A8A8A;
+  --gray-2:#B4B4B4;
+  --line:#E2E2E2;
+  --line-2:#CFCFCF;
+
+  --sans:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --pad:28px;
+  --max:1240px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  background:var(--paper);
+  color:var(--ink);
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  /* 글이 적어도 푸터가 화면 중간에 뜨지 않도록 */
+  min-height:100vh;
+  display:flex;flex-direction:column;
+}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+
+/* 키보드 사용자용 본문 바로가기 */
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:50;
+  background:var(--ink);color:var(--paper);padding:10px 16px;
+}
+.skip:focus{left:0}
+
+/* ---------- masthead ---------- */
+.masthead{
+  border-bottom:1px solid var(--ink);
+  padding:0 var(--pad);
+  position:sticky;top:0;z-index:20;
+  background:var(--paper);
+}
+.masthead-in{
+  max-width:var(--max);margin:0 auto;
+  display:flex;align-items:baseline;gap:22px;
+  /* 높이를 고정하면 글자가 위로 붙는다. 패딩으로 잡아야 글자 크기가 바뀌어도 가운데에 온다 */
+  padding:clamp(16px,2vw,26px) 0;
+}
+/* clamp(최소, 유동, 최대) — 넓은 화면에서 최대값(기존의 3배)까지 커지고,
+   좁아지면 메뉴와 겹치지 않게 알아서 줄어든다 */
+.wordmark{
+  font-weight:800;font-size:clamp(34px,4.45vw,57px);letter-spacing:-.045em;
+  line-height:1;
+}
+.wordmark span{font-weight:200;color:var(--gray)}
+/* 컨셉 문구 세 줄. 구분자는 | 글리프가 아니라 1px 괘선을 쓴다 —
+   카드 경계와 같은 규칙이고, 글자보다 가벼워 문구를 덜 방해한다.
+   좁아지면 줄바꿈되도록 flex-wrap 을 열어 둔다 (마스트헤드가 한 단 높아진다) */
+.tagline{
+  display:flex;flex-wrap:wrap;align-items:baseline;
+  color:var(--gray);font-size:clamp(11px,1.25vw,16px);letter-spacing:-.015em;
+  line-height:1.5;
+}
+/* 괘선을 왼쪽이 아니라 오른쪽에 둔다. 줄바꿈될 때 괘선이 다음 줄 앞머리에
+   홀로 남는 대신 앞 줄 끝에 붙어 "이어진다"로 읽힌다 */
+.tagline span{
+  padding:0 13px;
+  border-right:1px solid var(--line-2);
+  white-space:nowrap;
+}
+.tagline span:first-child{padding-left:0}
+.tagline span:last-child{padding-right:0;border-right:none}
+.masthead-end{margin-left:auto;display:flex;gap:20px;align-items:baseline}
+/* nowrap 이 없으면 좁은 화면에서 "노 트" 처럼 글자 중간이 끊긴다 */
+.masthead-end a{color:var(--gray);white-space:nowrap;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
+.masthead-end a:hover{color:var(--ink);border-color:var(--ink)}
+.masthead-end a[aria-current="page"]{color:var(--ink);border-color:var(--ink)}
+
+/* ---------- 제품 라인 (로고 아래) ---------- */
+.coverage{
+  border-bottom:1px solid var(--line);
+  padding:0 var(--pad);
+  background:var(--paper);
+}
+.coverage-in{
+  max-width:var(--max);margin:0 auto;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  list-style:none;
+}
+.coverage-item{
+  padding:17px 24px 15px;
+  border-left:1px solid var(--line);
+}
+/* 첫 칸은 워드마크와 왼쪽 선을 맞춘다 */
+.coverage-item:first-child{border-left:none;padding-left:0}
+.coverage-name{
+  display:block;
+  font-size:15px;font-weight:700;letter-spacing:-.03em;line-height:1.35;
+}
+.coverage-sub{
+  display:block;margin-top:6px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;
+  color:var(--gray);line-height:1.5;
+}
+
+/* ---------- search hero ---------- */
+.hero{
+  border-bottom:1px solid var(--line);
+  background:var(--paper-2);
+  padding:0 var(--pad);
+}
+.hero-in{
+  max-width:var(--max);margin:0 auto;
+  padding:44px 0 40px;
+}
+.hero-lede{
+  color:var(--gray);font-size:13.5px;letter-spacing:-.01em;
+  margin-bottom:14px;
+}
+.searchbox{
+  position:relative;max-width:660px;
+}
+.searchbox svg{
+  position:absolute;left:0;top:50%;transform:translateY(-50%);
+  width:20px;height:20px;stroke:var(--gray);fill:none;stroke-width:2;
+  pointer-events:none;
+}
+.search{
+  width:100%;
+  border:none;border-bottom:2px solid var(--ink);
+  background:none;color:var(--ink);
+  font-family:var(--sans);font-weight:600;letter-spacing:-.025em;
+  font-size:26px;line-height:1.3;
+  padding:6px 40px 12px 32px;
+  caret-color:var(--ink);
+}
+.search::placeholder{color:var(--gray-2);font-weight:300}
+.search:focus{outline:none}
+/* type=search 의 브라우저 기본 ✕ 버튼. 아래 커스텀 "지우기 ✕"와 겹치므로 없앤다 */
+.search::-webkit-search-cancel-button,
+.search::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+.search-clear{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  color:var(--gray);font-size:13px;padding:6px;
+  opacity:0;pointer-events:none;transition:opacity .15s;
+}
+.search-clear.show{opacity:1;pointer-events:auto}
+.search-clear:hover{color:var(--ink)}
+
+.hero-hints{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;align-items:baseline;
+}
+.hint-label{color:var(--gray-2);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;margin-right:4px}
+.hint{
+  font-family:var(--mono);font-size:11px;letter-spacing:.02em;
+  color:var(--ink-2);border:1px solid var(--line-2);
+  padding:4px 10px;background:var(--paper);
+  transition:border-color .15s,color .15s;
+}
+.hint:hover{border-color:var(--ink);color:var(--ink)}
+
+/* ---------- grid ---------- */
+/* body가 flex 컬럼이라 width 없이 margin:0 auto 만 주면 콘텐츠 폭으로 줄어든다 */
+.wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 var(--pad)}
+.grid-h{
+  display:flex;align-items:baseline;gap:16px;
+  padding:30px 0 14px;
+}
+.count{color:var(--gray)}
+.sort{margin-left:auto;color:var(--gray);display:flex;gap:14px}
+.sort button{font-size:12.5px;letter-spacing:-.01em}
+.sort button[aria-pressed="true"]{color:var(--ink);font-weight:600}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:0;
+  border-top:1px solid var(--ink);
+  border-left:1px solid var(--line);
+  margin-bottom:96px;
+}
+.card{
+  display:flex;flex-direction:column;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  padding:26px 24px 22px;
+  min-height:230px;
+  background:var(--paper);
+  transition:background .16s;
+  animation:fade .32s ease;
+}
+.card:hover{background:var(--paper-2)}
+.card[hidden]{display:none}
+
+.card-top{
+  display:flex;align-items:baseline;gap:10px;
+  margin-bottom:14px;
+}
+/* 노트/스터디 갈래 표시. 태그 칩은 각지고 이 표시는 알약 모양이라
+   같은 자리에서도 성격이 다른 표시임이 구분된다 */
+.card-kind{
+  font-size:10.5px;letter-spacing:-.01em;line-height:1;
+  padding:4px 9px 5px;
+  border-radius:999px;
+  white-space:nowrap;
+}
+/* 노트는 대다수라 조용하게, 스터디는 눈에 띄게 */
+.card-kind-note{border:1px solid var(--line-2);color:var(--ink-2)}
+.card-kind-study{background:var(--ink);color:var(--paper)}
+
+.card-date{font-family:var(--mono);font-size:10.5px;color:var(--gray);letter-spacing:.03em}
+.card-min{font-family:var(--mono);font-size:10.5px;color:var(--gray-2);letter-spacing:.03em;margin-left:auto}
+
+.card-t{
+  font-size:18px;font-weight:700;letter-spacing:-.03em;line-height:1.42;
+}
+.card-t span{
+  display:inline;background-image:linear-gradient(var(--ink),var(--ink));
+  background-size:0 1px;background-repeat:no-repeat;background-position:0 100%;
+  transition:background-size .3s cubic-bezier(.4,0,.15,1);
+}
+.card:hover .card-t span{background-size:100% 1px}
+
+.card-d{
+  color:var(--ink-2);font-size:13.5px;letter-spacing:-.012em;
+  margin-top:9px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+/* 본문에서만 걸렸을 때 근거로 보여주는 한 줄. 검색 중에만 나타난다 */
+.card-snippet{
+  margin-top:11px;padding-left:10px;
+  border-left:2px solid var(--line-2);
+  color:var(--ink-2);font-size:12.5px;line-height:1.55;letter-spacing:-.012em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-snippet[hidden]{display:none}
+.card-snippet-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:.03em;
+  color:var(--gray-2);margin-right:7px;
+}
+
+.card-tags{
+  display:flex;gap:6px;flex-wrap:wrap;
+  margin-top:auto;padding-top:18px;
+}
+.tag{
+  font-family:var(--mono);font-size:10px;letter-spacing:.03em;
+  color:var(--gray);border:1px solid var(--line-2);
+  padding:2px 7px;background:var(--paper);
+  transition:border-color .15s,color .15s;
+  display:inline-block;
+}
+.tag:hover{border-color:var(--ink);color:var(--ink)}
+
+mark{
+  background:var(--ink);color:var(--paper);
+  padding:0 2px;
+}
+
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+
+.empty{
+  grid-column:1/-1;
+  padding:80px 24px;color:var(--gray);text-align:center;
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:6px}
+
+.foot{
+  border-top:1px solid var(--ink);padding:22px var(--pad) 60px;
+  margin-top:auto;
+}
+.foot-in{
+  max-width:var(--max);margin:0 auto;display:flex;gap:18px;
+  color:var(--gray);flex-wrap:wrap;align-items:baseline;
+}
+.foot-in a{border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
+.foot-in a:hover{color:var(--ink);border-color:var(--ink)}
+.foot-end{margin-left:auto}
+
+/* ---------- 세로 목록 (노트 · 스터디) ---------- */
+.sheet-list{max-width:840px;margin:0 auto;padding:0 0 96px}
+/* 캡처 2단이 들어가므로 글 페이지보다 넓게 잡는다 */
+.sheet-study{max-width:1080px;margin:0 auto;padding:0 0 96px}
+
+.group{margin-top:46px}
+.group:first-of-type{margin-top:30px}
+.group-h{
+  display:flex;align-items:baseline;gap:12px;
+  padding-bottom:12px;
+}
+.group-t{font-size:17px;font-weight:700;letter-spacing:-.03em}
+.group-count{color:var(--gray)}
+
+.rows{list-style:none;border-top:1px solid var(--ink)}
+.row{
+  display:grid;grid-template-columns:78px 1fr 58px;gap:20px;
+  padding:20px 0;
+  border-bottom:1px solid var(--line);
+  align-items:baseline;
+}
+.row-date{color:var(--gray)}
+.row-min{color:var(--gray-2);text-align:right}
+
+/* 썸네일이 있는 줄 — 날짜 자리를 이미지가 쓴다.
+   정사각형이라 가로·세로 캡처가 섞여도 줄 높이가 일정하다 */
+.rows{--thumb:132px}
+.row-thumbed{grid-template-columns:var(--thumb) 1fr 58px;align-items:start}
+.row-thumb{
+  display:block;width:var(--thumb);height:var(--thumb);
+  border:1px solid var(--line);background:var(--paper-2);
+  overflow:hidden;
+}
+.row-thumb img{
+  display:block;width:100%;height:100%;
+  /* 비율이 제각각인 캡처를 같은 크기 칸에 채운다 */
+  object-fit:cover;
+}
+.row:hover .row-thumb{border-color:var(--line-2)}
+.row-meta{display:block;color:var(--gray);margin-bottom:9px}
+.row-t{
+  font-size:17px;font-weight:700;letter-spacing:-.03em;line-height:1.42;
+}
+.row-t span{
+  background-image:linear-gradient(var(--ink),var(--ink));
+  background-size:0 1px;background-repeat:no-repeat;background-position:0 100%;
+  transition:background-size .3s cubic-bezier(.4,0,.15,1);
+}
+.row:hover .row-t span{background-size:100% 1px}
+.row-d{
+  color:var(--ink-2);font-size:13.5px;letter-spacing:-.012em;margin-top:7px;
+}
+.row-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:13px}
+
+.rows-empty{
+  border-top:1px solid var(--line);
+  padding:22px 0;color:var(--gray-2);font-size:13.5px;
+}
+
+/* ---------- 글 · 정적 페이지 ---------- */
+.sheet{max-width:680px;margin:0 auto;padding:0 0 96px}
+
+.article-head{
+  padding:46px 0 26px;
+  border-bottom:1px solid var(--ink);
+  margin-bottom:34px;
+}
+.article-meta{display:flex;gap:12px;align-items:baseline;color:var(--gray)}
+.article-min{margin-left:auto;color:var(--gray-2)}
+.article-t{
+  font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1.3;
+  margin-top:14px;
+}
+.article-d{
+  color:var(--ink-2);font-size:15px;letter-spacing:-.015em;margin-top:14px;
+}
+.article-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:22px}
+
+/* 영상. aspect-ratio 로 비율을 잡으면 로드 전에도 자리를 차지해
+   본문이 밀려 내려가는 레이아웃 이동(CLS)이 생기지 않는다 */
+.video{
+  aspect-ratio:16/9;
+  border:1px solid var(--line);background:var(--paper-2);
+  margin-bottom:38px;
+}
+.video iframe,.video video{
+  display:block;width:100%;height:100%;border:0;
+}
+.video-fallback{
+  border:1px solid var(--line-2);padding:14px 16px;margin-bottom:38px;
+  color:var(--ink-2);font-size:14px;
+}
+.video-fallback a{border-bottom:1px solid var(--line-2);word-break:break-all}
+/* 개발 중에만 나온다 */
+.video-warn{
+  display:block;margin-bottom:8px;
+  background:var(--ink);color:var(--paper);padding:6px 10px;font-weight:600;
+}
+
+.prose{font-size:16px;line-height:1.85;letter-spacing:-.012em}
+.prose > * + *{margin-top:1.15em}
+.prose h2{
+  font-size:20px;font-weight:700;letter-spacing:-.03em;line-height:1.4;
+  margin-top:2.6em;padding-top:.9em;border-top:1px solid var(--line);
+}
+.prose h3{font-size:16.5px;font-weight:700;letter-spacing:-.025em;margin-top:2em}
+.prose a{border-bottom:1px solid var(--line-2);transition:border-color .15s}
+.prose a:hover{border-bottom-color:var(--ink)}
+.prose ul,.prose ol{padding-left:1.25em}
+.prose li{margin-top:.4em}
+.prose li::marker{color:var(--gray-2)}
+.prose blockquote{
+  border-left:2px solid var(--ink);padding-left:16px;
+  color:var(--ink-2);
+}
+.prose code{
+  font-family:var(--mono);font-size:13px;
+  background:var(--paper-2);border:1px solid var(--line);padding:1px 5px;
+}
+.prose pre{
+  border:1px solid var(--line);padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.7;
+}
+.prose pre code{background:none;border:none;padding:0;font-size:inherit}
+.prose img{max-width:100%;height:auto;border:1px solid var(--line)}
+.prose table{width:100%;border-collapse:collapse;font-size:14px}
+.prose th,.prose td{border:1px solid var(--line);padding:8px 11px;text-align:left}
+.prose th{background:var(--paper-2);font-weight:600}
+.prose hr{border:none;border-top:1px solid var(--line);margin:2.6em 0}
+
+/* ---------- 캡처 2단 (스터디 글) ----------
+   마크다운은 "소제목 → 이미지 → 번호 목록" 순서 그대로 두고, 배치만 CSS 가 만든다.
+   이미지를 오른쪽으로 띄우면(float) 번호 목록이 왼쪽 남은 자리로 흐른다.
+   변환 코드도, 별도 패키지도 필요 없다. */
+
+/* 목록 기호는 캡처에 그려 넣은 원문자와 짝이 맞아야 하므로 ①②③ 으로 낸다 */
+@counter-style circled-num{
+  system:fixed 1;
+  symbols:"①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" "⑩"
+          "⑪" "⑫" "⑬" "⑭" "⑮" "⑯" "⑰" "⑱" "⑲" "⑳";
+  suffix:"  ";
+  /* 20개를 넘어가거나 지원하지 않는 브라우저에서는 숫자로 */
+  fallback:decimal;
+}
+
+/* 설명과 캡처를 그리드의 서로 다른 칸에 넣는다. float 과 달리 두 영역이
+   같은 흐름을 공유하지 않으므로, 설명이 길거나 태그가 섞여도 캡처와 뒤섞이지 않는다. */
+.sheet-study{
+  /* 캡처 높이는 모두 이 값으로 통일한다. 가로 그림은 폭이 알아서 줄어든다 */
+  --capture-h:460px;
+}
+/* flow-root 는 안쪽 캡처를 이 상자 안에 가둔다.
+   없으면 마지막 캡처가 본문 밖으로 삐져나와 푸터 옆에 끼어든다 */
+.sheet-study .prose{display:flow-root}
+
+/* 소제목은 앞 절 아래로 내려와 전체 폭을 쓰고, 아래 내용과 간격을 둔다.
+   절이 반복되는 구조라 절마다 괘선이 그어지면 화면이 잘게 쪼개져 보인다 —
+   글 페이지의 h2 괘선을 여기서는 없앤다 */
+.sheet-study .prose h2{
+  clear:both;
+  margin:2.8em 0 0;padding:0 0 16px;
+  border-top:none;
+}
+.sheet-study .prose h2:first-child{margin-top:0}
+
+/* 4·5. 캡처는 오른쪽. 높이를 통일하고 그 안에서 비율을 지킨 채 가운데 정렬한다.
+   가로로 긴 그림은 높이가 같으므로 폭이 알아서 줄어든다 */
+.sheet-study .prose p:has(> img){
+  float:right;
+  width:74%;
+  height:var(--capture-h);
+  margin:0 0 26px 2%;
+  display:flex;align-items:center;justify-content:center;
+}
+.sheet-study .prose p:has(> img) img{
+  max-width:100%;max-height:100%;width:auto;height:auto;
+  border:1px solid var(--line);
+  /* 7. 눌러서 원본 크기로 볼 수 있다는 신호 */
+  cursor:zoom-in;
+}
+
+/* 6. 설명 쪽은 전부 BFC 로 만든다. BFC 는 띄운 캡처를 타고 흐르지 않으므로
+   목록이든 문단이든 코드든 왼쪽 칸(약 24%)에 가지런히 선다 —
+   설명 안에 무엇이 들어와도 캡처와 뒤섞이지 않는다 */
+.sheet-study .prose > p:not(:has(> img)),
+.sheet-study .prose > ol,
+.sheet-study .prose > ul,
+.sheet-study .prose > blockquote,
+.sheet-study .prose > pre,
+.sheet-study .prose > table{overflow:hidden}
+
+/* 2·3. 원문자를 1.5배로. 순서글 칸은 캡처 폭에 밀려 24% 로 좁아진다 */
+.sheet-study .prose ol{
+  list-style:circled-num outside;
+  padding-left:2.1em;
+  font-size:14.5px;line-height:1.7;color:var(--ink-2);
+}
+.sheet-study .prose ol li{margin-top:.7em}
+.sheet-study .prose ol li:first-child{margin-top:0}
+.sheet-study .prose ol li::marker{color:var(--ink);font-size:1.5em}
+
+@media (max-width:860px){
+  /* 좁은 화면에서는 캡처를 위에 통째로 놓고 설명을 아래에 */
+  .sheet-study .prose p:has(> img){
+    float:none;width:100%;height:auto;margin:0 0 18px;
+  }
+  .sheet-study .prose p:has(> img) img{max-height:none}
+}
+
+.article-foot{
+  margin-top:56px;padding-top:20px;border-top:1px solid var(--ink);
+  display:flex;gap:18px;align-items:baseline;color:var(--gray);
+}
+.article-foot a:hover{color:var(--ink)}
+
+.page-head{padding:46px 0 0}
+.page-t{font-size:31px;font-weight:800;letter-spacing:-.045em;line-height:1.3}
+.page-lede{color:var(--ink-2);font-size:15px;letter-spacing:-.015em;margin-top:14px}
+.page-body{margin-top:38px}
+
+.contact{
+  border:1px solid var(--ink);padding:24px 24px 22px;margin-top:44px;
+}
+.contact h2{font-size:17px;font-weight:700;letter-spacing:-.03em}
+.contact p{color:var(--ink-2);font-size:14px;margin-top:8px}
+.contact-mail{
+  display:inline-block;margin-top:16px;
+  font-family:var(--mono);font-size:13px;letter-spacing:-.01em;
+  border-bottom:1px solid var(--ink);padding-bottom:2px;
+}
+
+@media (max-width:640px){
+  :root{--pad:20px}
+  .hero-in{padding:32px 0 30px}
+  .search{font-size:20px;padding-left:28px}
+  .searchbox svg{width:17px;height:17px}
+  /* 컨셉 문구는 감춘다. 한 줄만 남겨도 워드마크+메뉴와 함께 폭을 넘겨
+     메뉴가 화면 밖으로 밀린다 (375px 에서 확인) */
+  .tagline{display:none}
+  .masthead-in{gap:12px}
+  .masthead-end{gap:14px}
+  .card{min-height:0}
+  /* 3열은 좁은 화면에서 글자가 깨진다. 세로로 쌓고 괘선 방향을 바꾼다 */
+  .coverage-in{grid-template-columns:1fr}
+  .coverage-item{border-left:none;border-top:1px solid var(--line);padding:12px 0}
+  .coverage-item:first-child{border-top:none}
+  /* 줄바꿈되면 오른쪽 끝에 혼자 떨어지므로 앞 항목에 붙인다 */
+  .foot-end{margin-left:0}
+  /* 날짜(또는 썸네일)·읽는시간을 한 줄로 올리고 본문이 그 아래 전체 폭을 쓴다.
+     order 로 본문을 맨 뒤로 보내야 읽는시간이 첫 줄에 함께 선다 */
+  .row{grid-template-columns:1fr auto;gap:6px 14px}
+  .row-main{grid-column:1/-1;order:1}
+  .article-t,.page-t{font-size:25px}
+  .prose{font-size:15.5px}
+  /* 좁은 화면에서는 표가 본문을 밀지 않도록 표 안에서만 가로 스크롤 */
+  .prose table{display:block;overflow-x:auto}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}

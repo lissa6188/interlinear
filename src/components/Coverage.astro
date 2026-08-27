@@ -1,0 +1,22 @@
+---
+import { PRODUCTS } from '../lib/site';
+
+// 로고 바로 아래 제품 라인. "이 사람이 무엇을 다루는가"를 3초 안에 알리는 자리다.
+// 검색 링크로 만들지 않은 이유: 아직 글이 없는 제품을 누르면 0편이 나온다.
+// 글이 쌓이면 태그 칩처럼 /?q= 로 연결하면 된다.
+---
+
+<section class="coverage" aria-label="주로 다루는 제품">
+  <ul class="coverage-in">
+    {
+      PRODUCTS.map((product) => (
+        <li class="coverage-item">
+          <span class="coverage-name">{product.name}</span>
+          {product.items.length > 0 && (
+            <span class="coverage-sub">{product.items.join(' · ')}</span>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+</section>

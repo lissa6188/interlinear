@@ -1,0 +1,117 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TagList from '../../components/TagList.astro';
+import VideoEmbed from '../../components/VideoEmbed.astro';
+import { readingMinutes } from '../../lib/notes';
+import { SITE } from '../../lib/site';
+import { graph, person, PERSON_ID, SITE_ID } from '../../lib/jsonld';
+import { parseVideo } from '../../lib/video';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('blog');
+  return notes.map((note) => ({ params: { slug: note.id }, props: { note } }));
+}
+
+interface Props {
+  note: CollectionEntry<'blog'>;
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+const isoDate = note.data.date.toISOString().slice(0, 10);
+const shortDate = isoDate.slice(2).replace(/-/g, '.');
+const minutes = readingMinutes(note.body ?? '');
+const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
+const markdownUrl = `${SITE.url}/notes/${note.id}.md`;
+const updatedIso = note.data.updated?.toISOString().slice(0, 10) ?? isoDate;
+// 한국어는 어절 기준. 정확한 수치가 아니라 분량 신호다
+const wordCount = (note.body ?? '').split(/\s+/).filter(Boolean).length;
+
+const video = note.data.video ? parseVideo(note.data.video) : null;
+// 영상이 붙은 글은 VideoObject 로도 알린다. 검색·AI가 영상 있는 글을 따로 다룬다.
+// uploadDate 는 영상 업로드일이 아니라 이 글의 발행일이다 — 둘이 다르면
+// 머리말 date 를 영상 기준으로 맞추거나 이 항목을 빼는 편이 정확하다.
+const videoJsonLd =
+  video && video.kind !== 'unknown'
+    ? {
+        '@type': 'VideoObject',
+        name: note.data.title,
+        description: note.data.description,
+        uploadDate: isoDate,
+        embedUrl: video.kind === 'file' ? undefined : video.embedUrl,
+        contentUrl: video.kind === 'file' ? `${SITE.url}${video.src}` : undefined,
+        thumbnailUrl: video.kind === 'youtube' ? video.thumbnailUrl : undefined,
+      }
+    : null;
+
+const jsonLd = graph(person(), {
+  '@type': 'BlogPosting',
+  '@id': `${canonical}#post`,
+  headline: note.data.title,
+  description: note.data.description,
+  url: canonical,
+  mainEntityOfPage: canonical,
+  datePublished: isoDate,
+  dateModified: updatedIso,
+  keywords: note.data.tags.join(', '),
+  articleSection: note.data.tags[0] ?? '노트',
+  wordCount,
+  timeRequired: `PT${minutes}M`,
+  inLanguage: 'ko',
+  author: { '@id': PERSON_ID },
+  publisher: { '@id': PERSON_ID },
+  isPartOf: { '@id': SITE_ID },
+  // 같은 글의 마크다운 원문 위치를 명시한다
+  encoding: {
+    '@type': 'MediaObject',
+    encodingFormat: 'text/markdown',
+    contentUrl: markdownUrl,
+  },
+  // 영상은 글에 속한 것으로 붙인다. 따로 떼어 두면 둘의 관계가 사라진다
+  ...(videoJsonLd ? { video: videoJsonLd } : {}),
+}, {
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: '노트', item: `${SITE.url}/` },
+    { '@type': 'ListItem', position: 2, name: note.data.title, item: canonical },
+  ],
+});
+---
+
+<BaseLayout title={note.data.title} description={note.data.description} ogType="article">
+  <script slot="head" type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
+  {/* 같은 글의 마크다운 원문. 에이전트가 HTML 대신 이걸 가져가면 인용이 정확해진다 */}
+  <link slot="head" rel="alternate" type="text/markdown" href={markdownUrl} />
+  <meta slot="head" property="article:published_time" content={isoDate} />
+  <meta slot="head" property="article:modified_time" content={updatedIso} />
+  {note.data.tags.map((tag) => <meta slot="head" property="article:tag" content={tag} />)}
+
+  <main class="wrap" id="main">
+    <article class="sheet">
+      <header class="article-head">
+        <div class="article-meta mono">
+          <time datetime={isoDate}>{shortDate}</time>
+          <span class="article-min">{minutes} min</span>
+        </div>
+        <h1 class="article-t">{note.data.title}</h1>
+        <p class="article-d">{note.data.description}</p>
+        <TagList tags={note.data.tags} class="article-tags" />
+      </header>
+
+      {note.data.video && <VideoEmbed src={note.data.video} title={`${note.data.title} 영상`} />}
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      <footer class="article-foot mono">
+        <a href="/">&larr; 노트 목록</a>
+        <a class="foot-end" href={`mailto:${SITE.email}?subject=${encodeURIComponent(note.data.title)}`}>
+          이 글로 문의하기
+        </a>
+      </footer>
+    </article>
+  </main>
+</BaseLayout>
