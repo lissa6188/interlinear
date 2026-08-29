@@ -7,6 +7,9 @@ tags: [d365, sales]
 # thumbnail: /captures/파일명.png
 # 데모 영상이 있으면 (없으면 줄째 지운다)
 # video: https://www.youtube.com/watch?v=영상ID
+# 화면 템플릿. 스터디의 기본은 페이지 넘김(딕) — ## 절 하나가 한 페이지가 되고
+# 클릭·방향키로 넘긴다. 스크롤 글로 쓰고 싶으면 아래 줄을 살린다
+# template: note
 ---
 
 <!--

@@ -1,8 +1,9 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import TagList from '../../components/TagList.astro';
-import VideoEmbed from '../../components/VideoEmbed.astro';
+import NoteArticle from '../../components/templates/NoteArticle.astro';
+import StudyDeck from '../../components/templates/StudyDeck.astro';
+import HtmlArticle from '../../components/templates/HtmlArticle.astro';
 import { readingMinutes } from '../../lib/notes';
 import { SITE } from '../../lib/site';
 import { graph, person, PERSON_ID, SITE_ID } from '../../lib/jsonld';
@@ -19,6 +20,9 @@ interface Props {
 
 const { note } = Astro.props;
 const { Content } = await render(note);
+
+// 화면 템플릿. 노트의 기본은 스크롤 글이고, 머리말 template: study 로 딕을 고를 수 있다
+const template = note.data.template ?? 'note';
 
 const isoDate = note.data.date.toISOString().slice(0, 10);
 const shortDate = isoDate.slice(2).replace(/-/g, '.');
@@ -78,6 +82,20 @@ const jsonLd = graph(person(), {
     { '@type': 'ListItem', position: 2, name: note.data.title, item: canonical },
   ],
 });
+
+const tpl = {
+  title: note.data.title,
+  description: note.data.description,
+  isoDate,
+  shortDate,
+  minutes,
+  tags: note.data.tags,
+  video: note.data.video,
+  backHref: '/',
+  backLabel: '노트 목록',
+  contactEmail: SITE.email,
+  Content,
+};
 ---
 
 <BaseLayout title={note.data.title} description={note.data.description} ogType="article">
@@ -88,30 +106,11 @@ const jsonLd = graph(person(), {
   <meta slot="head" property="article:modified_time" content={updatedIso} />
   {note.data.tags.map((tag) => <meta slot="head" property="article:tag" content={tag} />)}
 
-  <main class="wrap" id="main">
-    <article class="sheet">
-      <header class="article-head">
-        <div class="article-meta mono">
-          <time datetime={isoDate}>{shortDate}</time>
-          <span class="article-min">{minutes} min</span>
-        </div>
-        <h1 class="article-t">{note.data.title}</h1>
-        <p class="article-d">{note.data.description}</p>
-        <TagList tags={note.data.tags} class="article-tags" />
-      </header>
-
-      {note.data.video && <VideoEmbed src={note.data.video} title={`${note.data.title} 영상`} />}
-
-      <div class="prose">
-        <Content />
-      </div>
-
-      <footer class="article-foot mono">
-        <a href="/">&larr; 노트 목록</a>
-        <a class="foot-end" href={`mailto:${SITE.email}?subject=${encodeURIComponent(note.data.title)}`}>
-          이 글로 문의하기
-        </a>
-      </footer>
-    </article>
-  </main>
+  {template === 'study' ? (
+    <StudyDeck {...tpl} />
+  ) : template === 'html' ? (
+    <HtmlArticle {...tpl} rawBody={note.body ?? ''} />
+  ) : (
+    <NoteArticle {...tpl} />
+  )}
 </BaseLayout>

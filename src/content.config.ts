@@ -20,6 +20,14 @@ const common = {
   updated: z.coerce.date().optional(),
   // 본문 위에 붙일 영상. YouTube 주소 또는 public/ 에 올린 파일 경로
   video: z.string().optional(),
+  /**
+   * 화면 템플릿. 안 적으면 노트는 'note'(스크롤 글), 스터디는 'study'(페이지 넘김 딕).
+   * - note:  스크롤 글
+   * - study: 페이지 넘김 딕 (## 절 하나가 한 페이지)
+   * - html:  본문을 마크다운으로 변환하지 않고 HTML 그대로 내보낸다.
+   *          버튼·입력 같은 조작 가능한 콘텐츠를 script 째 넣을 때 쓴다
+   */
+  template: z.enum(['note', 'study', 'html']).optional(),
 };
 
 /** 노트 — 제품별 실무 기록 */

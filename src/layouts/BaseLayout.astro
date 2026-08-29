@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import Masthead from '../components/Masthead.astro';
 import Footer from '../components/Footer.astro';
+import FloatingDock from '../components/FloatingDock.astro';
+import StrollingCat from '../components/StrollingCat.astro';
 import { SITE } from '../lib/site';
 
 interface Props {
@@ -64,5 +66,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
     <Masthead />
     <slot />
     <Footer />
+    <FloatingDock />
+    <StrollingCat />
   </body>
 </html>

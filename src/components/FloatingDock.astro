@@ -1,0 +1,123 @@
+---
+// 우하단 플로팅 독 — 위에는 오늘 본 글, 아래에는 버튼 두 개.
+// 방문 기록은 서버가 아니라 방문자의 브라우저(localStorage)에만 남는다.
+// 날짜가 바뀌면 목록이 비워진다 — "오늘 본" 이니까.
+import { SITE } from '../lib/site';
+---
+
+<aside class="dock" aria-label="빠른 메뉴">
+  <button class="dock-unfold mono" id="dock-unfold" type="button" hidden>
+    오늘 본 글 <b id="dock-unfold-n">0</b>
+  </button>
+
+  <section class="dock-seen" id="dock-seen" hidden aria-label="오늘 본 글">
+    <header class="dock-seen-head mono">
+      <span>오늘 본 글</span>
+      <button id="dock-clear" type="button" title="목록 비우기">지우기</button>
+      <button id="dock-fold" type="button" title="접기" aria-label="오늘 본 글 접기">&minus;</button>
+    </header>
+    <ul class="dock-seen-list" id="dock-seen-list"></ul>
+  </section>
+
+  <div class="dock-btns">
+    <a class="dock-btn" href={`mailto:${SITE.email}?subject=${encodeURIComponent('기능문의')}`}>
+      기능문의 <small>Free</small>
+    </a>
+    {/* 두 번째 버튼 자리 — 용도가 정해지면 이 자리에 넣는다 */}
+    <button class="dock-btn dock-btn-ghost" type="button" disabled title="두 번째 버튼 자리. 용도가 정해지면 열립니다">
+      준비 중
+    </button>
+  </div>
+</aside>
+
+<script>
+  // @ts-nocheck — 의도적으로 순수 자바스크립트다.
+  const KEY = 'il-seen-v1';
+  const FOLD = 'il-dock-fold';
+  const MAX = 10; // 하루에 이보다 많이 읽으면 오래된 것부터 밀려난다
+
+  // UTC 가 아니라 방문자의 하루 기준. toISOString 을 쓰면 아침 9시(KST)에 리셋된다
+  const today = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  // localStorage 는 시크릿 창·차단 설정에서 던질 수 있다 — 전부 try 로 감싼다
+  const load = () => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      return raw && raw.d === today() && Array.isArray(raw.v) ? raw.v : [];
+    } catch { return []; }
+  };
+  const save = (v) => { try { localStorage.setItem(KEY, JSON.stringify({ d: today(), v })); } catch {} };
+  const getFold = () => { try { return localStorage.getItem(FOLD) === '1'; } catch { return false; } };
+  const setFold = (on) => { try { on ? localStorage.setItem(FOLD, '1') : localStorage.removeItem(FOLD); } catch {} };
+
+  let items = load();
+
+  // 글 페이지에 왔으면 기록한다. 제목은 화면의 h1, 썸네일은 본문 첫 이미지
+  if (/^\/(notes|study)\/.+/.test(location.pathname)) {
+    const h1 = document.querySelector('.article-t');
+    if (h1) {
+      // 딕 템플릿은 이 스크립트보다 먼저 실행되며 이미지를 .deck-fig 로 옮긴다 —
+      // 어느 쪽에 있든 첫 캡처를 썸네일로 쓴다
+      const img = document.querySelector('.prose img, .deck-fig img');
+      const it = { u: location.pathname, t: h1.textContent.trim() };
+      if (img) it.i = img.getAttribute('src');
+      items = [it, ...items.filter((x) => x.u !== it.u)].slice(0, MAX);
+      save(items);
+    }
+  }
+
+  const seen = document.getElementById('dock-seen');
+  const list = document.getElementById('dock-seen-list');
+  const unfold = document.getElementById('dock-unfold');
+  const unfoldN = document.getElementById('dock-unfold-n');
+
+  function renderList() {
+    // 지금 보고 있는 글은 뺀다 — 눌러도 갈 곳이 없는 타일이 된다
+    const shown = items.filter((x) => x.u !== location.pathname);
+    list.textContent = '';
+    for (const it of shown) {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.className = 'dock-tile';
+      a.href = it.u;
+      a.title = it.t;
+      a.setAttribute('aria-label', it.t);
+      if (it.i) {
+        const img = document.createElement('img');
+        img.src = it.i;
+        img.alt = '';
+        img.loading = 'lazy';
+        a.appendChild(img);
+      } else {
+        // 썸네일 없는 글은 제목 첫 글자를 활자로 — 지면다운 대체물
+        const s = document.createElement('span');
+        s.textContent = (it.t || '?').slice(0, 1);
+        a.appendChild(s);
+      }
+      li.appendChild(a);
+      list.appendChild(li);
+    }
+    const folded = getFold();
+    seen.hidden = folded || shown.length === 0;
+    unfold.hidden = !folded || shown.length === 0;
+    unfoldN.textContent = String(shown.length);
+  }
+  renderList();
+
+  document.getElementById('dock-clear').addEventListener('click', () => {
+    items = [];
+    save(items);
+    renderList();
+  });
+  document.getElementById('dock-fold').addEventListener('click', () => {
+    setFold(true);
+    renderList();
+  });
+  unfold.addEventListener('click', () => {
+    setFold(false);
+    renderList();
+  });
+</script>

@@ -1,0 +1,111 @@
+---
+// 화면 아래 여백을 어슬렁거리는 고양이.
+// 우리집 삼색이 사진을 Gemini 로 연필 소묘 스프라이트 시트로 그려
+// (사이트 소개 그림과 같은 그림체), 프레임을 잘라 애니메이션으로 조립했다.
+// 원본 시트: cat-src/ (저장소·배포에서 제외), 조립: public/cat/*.webp
+// 장식일 뿐이므로 스크린리더에는 숨기고, 움직임 최소화 설정에서는
+// 걷지 않고 앉아만 있는다.
+---
+
+<div class="cat-stroll" data-state="sit" aria-hidden="true">
+  <div class="cat-bubble mono" hidden></div>
+  <div class="cat-sprite"></div>
+</div>
+
+<script>
+  // @ts-nocheck — 의도적으로 순수 자바스크립트다.
+  // 상태 기계: 걷기 → (앉기 | 그루밍 | 잠) → 다시 걷기. 잠에서 깨면 기지개.
+  const el = document.querySelector('.cat-stroll');
+
+  if (el) {
+    const sprite = el.querySelector('.cat-sprite');
+    const bubble = el.querySelector('.cat-bubble');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // 첫 상태 전환에서 이미지가 늦게 떠 깜빡이지 않게 미리 받아 둔다
+    for (const n of ['walk', 'sit', 'groom', 'sleep', 'stretch']) {
+      new Image().src = `/cat/${n}.webp`;
+    }
+
+    const PAD = 12;
+    const SPEED = 42; // px/s — 급할 것 없는 속도
+    // 오른쪽 플로팅 독 자리는 밟지 않는다
+    const maxX = () => Math.max(140, Math.min(window.innerWidth * 0.62, window.innerWidth - 300));
+
+    let x = 24;
+    let timer = null;
+    el.style.transform = `translateX(${x}px)`;
+
+    const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
+    const set = (state) => { el.dataset.state = state; };
+
+    function idle() {
+      el.style.transition = 'none';
+      const r = Math.random();
+      if (r < 0.18) {
+        // 잠은 길게. 깨어나면 기지개를 켜고 움직인다
+        set('sleep');
+        later(wake, 12000 + Math.random() * 14000);
+      } else if (r < 0.45) {
+        set('groom');
+        later(walk, 5000 + Math.random() * 5000);
+      } else {
+        set('sit');
+        later(walk, 4000 + Math.random() * 7000);
+      }
+    }
+
+    function wake() {
+      set('stretch');
+      later(walk, 1700);
+    }
+
+    function walk() {
+      const target = PAD + Math.random() * (maxX() - PAD);
+      const dist = Math.abs(target - x);
+      if (dist < 40) return idle();
+      el.classList.toggle('flip', target < x);
+      set('walk');
+      const dur = dist / SPEED;
+      el.style.transition = `transform ${dur}s linear`;
+      requestAnimationFrame(() => {
+        x = target;
+        el.style.transform = `translateX(${x}px)`;
+      });
+      later(idle, dur * 1000 + 80);
+    }
+
+    if (reduce) {
+      set('sit');
+    } else {
+      later(walk, 2500);
+
+      window.addEventListener('resize', () => {
+        if (x > maxX()) {
+          x = Math.max(PAD, maxX() - 20);
+          el.style.transition = 'none';
+          el.style.transform = `translateX(${x}px)`;
+        }
+      });
+
+      // 탭이 안 보이는 동안은 시계를 세운다
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) clearTimeout(timer);
+        else later(walk, 1500);
+      });
+    }
+
+    // 쓰다듬으면(클릭) 대답한다. 자다가 깨면 기지개부터
+    const WORDS = ['야옹', '골골골', '냐-', '…'];
+    sprite.addEventListener('click', () => {
+      const sleeping = el.dataset.state === 'sleep';
+      bubble.textContent = sleeping ? '…!' : WORDS[Math.floor(Math.random() * WORDS.length)];
+      bubble.hidden = false;
+      setTimeout(() => { bubble.hidden = true; }, 1600);
+      if (reduce) return;
+      if (sleeping) return wake();
+      el.classList.add('hop');
+      setTimeout(() => el.classList.remove('hop'), 500);
+    });
+  }
+</script>

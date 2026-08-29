@@ -1,0 +1,245 @@
+---
+// 스터디 템플릿 — 스크롤 없는 페이지 넘김형(딕).
+// 서버는 지금까지처럼 일반 문서를 내보내고, 브라우저 JS가 ## 소제목 단위로
+// 잘라 슬라이드로 재조립한다. JS가 없는 환경(검색엔진·AI·noscript)은
+// 원래의 2단 스크롤 문서를 그대로 보므로 잃는 것이 없다.
+// 노트 글도 머리말에 template: study 를 적으면 이 모양으로 나온다.
+import TagList from '../TagList.astro';
+import VideoEmbed from '../VideoEmbed.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  isoDate: string;
+  shortDate: string;
+  minutes: number;
+  tags: string[];
+  video?: string;
+  backHref: string;
+  backLabel: string;
+  contactEmail: string;
+  Content: any;
+}
+
+const { title, description, isoDate, shortDate, minutes, tags, video, backHref, backLabel, contactEmail, Content } = Astro.props;
+---
+
+<main class="wrap" id="main">
+  <article class="sheet-study" data-deck data-back-href={backHref} data-back-label={backLabel} data-contact={`mailto:${contactEmail}?subject=${encodeURIComponent(title)}`}>
+    <header class="article-head">
+      <div class="article-meta mono">
+        <time datetime={isoDate}>{shortDate}</time>
+        <span class="article-min">{minutes} min</span>
+      </div>
+      <h1 class="article-t">{title}</h1>
+      <p class="article-d">{description}</p>
+      <TagList tags={tags} class="article-tags" />
+    </header>
+
+    {video && <VideoEmbed src={video} title={`${title} 영상`} />}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <footer class="article-foot mono">
+      <a href={backHref}>&larr; {backLabel}</a>
+      <a class="foot-end" href={`mailto:${contactEmail}?subject=${encodeURIComponent(title)}`}>
+        이 글로 문의하기
+      </a>
+    </footer>
+  </article>
+</main>
+
+<script>
+  // @ts-nocheck — 이 블록은 의도적으로 순수 자바스크립트다.
+  // 문서를 ## 단위로 잘라 슬라이드를 만든다. 노드를 복제하지 않고 "옮기므로"
+  // 이미지 원본 보기 등 다른 스크립트가 같은 노드를 계속 다룰 수 있다.
+  const sheet = document.querySelector('[data-deck]');
+  const prose = sheet && sheet.querySelector('.prose');
+
+  if (sheet && prose) {
+    // ---- 1. 문서를 절 단위로 나눈다 ----
+    const isFig = (el) =>
+      el.tagName === 'P' && el.querySelector('img') && el.textContent.trim() === '';
+
+    const sections = [];
+    let cur = { h: null, nodes: [] };
+    for (const el of Array.from(prose.children)) {
+      if (el.tagName === 'H2') {
+        if (cur.h || cur.nodes.length) sections.push(cur);
+        cur = { h: el, nodes: [] };
+      } else {
+        cur.nodes.push(el);
+      }
+    }
+    if (cur.h || cur.nodes.length) sections.push(cur);
+
+    // ---- 2. 슬라이드 DOM 조립 ----
+    const stage = document.createElement('section');
+    stage.className = 'deck-stage';
+    stage.setAttribute('aria-roledescription', '페이지 넘김 문서');
+    const view = document.createElement('div');
+    view.className = 'deck-view';
+    stage.appendChild(view);
+
+    const slides = [];
+    const addSlide = (cls) => {
+      const s = document.createElement('article');
+      s.className = 'deck-slide' + (cls ? ' ' + cls : '');
+      view.appendChild(s);
+      slides.push(s);
+      return s;
+    };
+
+    // 표지: 제목 블록을 통째로 옮기고, 첫 ## 앞의 여는 문단을 아래에 붙인다
+    const cover = addSlide('deck-slide-cover');
+    cover.appendChild(sheet.querySelector('.article-head'));
+    const intro = sections.length && sections[0].h === null ? sections.shift() : null;
+    if (intro) {
+      const lede = document.createElement('div');
+      lede.className = 'deck-lede';
+      intro.nodes.forEach((n) => lede.appendChild(n));
+      cover.appendChild(lede);
+    }
+
+    // 영상이 있으면 표지 다음 한 페이지를 통째로 쓴다
+    const videoEl = sheet.querySelector('.video');
+    if (videoEl) addSlide('deck-slide-media').appendChild(videoEl);
+
+    // 절 하나 = 페이지 하나. 왼쪽 설명, 오른쪽 캡처
+    for (const sec of sections) {
+      const figs = sec.nodes.filter(isFig);
+      const rest = sec.nodes.filter((n) => !isFig(n));
+      const slide = addSlide(figs.length ? '' : 'deck-slide-text');
+      const copy = document.createElement('div');
+      copy.className = 'deck-copy';
+      if (sec.h) copy.appendChild(sec.h);
+      rest.forEach((n) => copy.appendChild(n));
+      slide.appendChild(copy);
+      if (figs.length) {
+        const fig = document.createElement('figure');
+        fig.className = 'deck-fig';
+        figs.forEach((p) => {
+          p.querySelectorAll('img').forEach((img) => fig.appendChild(img));
+        });
+        slide.appendChild(fig);
+      }
+    }
+
+    // 끝 페이지: 목록·문의로 이어지는 출구
+    const end = addSlide('deck-slide-cover deck-slide-end');
+    end.innerHTML =
+      '<p class="deck-end-mark mono">끝.</p>' +
+      '<nav class="deck-end-nav mono">' +
+      `<a href="${sheet.dataset.backHref}">&larr; ${sheet.dataset.backLabel}</a>` +
+      `<a href="${sheet.dataset.contact}">이 글로 문의하기</a>` +
+      '<button type="button" data-deck-restart>처음부터 다시</button>' +
+      '</nav>';
+
+    // ---- 3. 진행 바 ----
+    const bar = document.createElement('div');
+    bar.className = 'deck-bar mono';
+    bar.innerHTML =
+      '<button type="button" class="deck-nav" data-step="-1" aria-label="이전 페이지">&larr;</button>' +
+      `<span class="deck-count" aria-live="polite">1 / ${slides.length}</span>` +
+      '<span class="deck-progress"><i></i></span>' +
+      '<button type="button" class="deck-nav" data-step="1" aria-label="다음 페이지">&rarr;</button>';
+    stage.appendChild(bar);
+
+    // ---- 4. 전환: 원문을 숨기고 무대를 올린다 ----
+    // 원문은 DOM 에 남는다(hidden). .md 원문·검색엔진용 본문이 그대로 유지된다.
+    sheet.hidden = true;
+    sheet.parentElement.appendChild(stage);
+    document.documentElement.classList.add('deck-on');
+
+    // 마스트헤드 높이만큼 아래에서 시작한다. 폭이 바뀌면 높이도 바뀐다
+    const masthead = document.querySelector('.masthead');
+    const setTop = () =>
+      document.documentElement.style.setProperty(
+        '--mh',
+        (masthead ? masthead.getBoundingClientRect().height : 57) + 'px'
+      );
+    setTop();
+    window.addEventListener('resize', setTop);
+
+    // ---- 5. 넘김 ----
+    const count = bar.querySelector('.deck-count');
+    const fill = bar.querySelector('.deck-progress i');
+    const navs = bar.querySelectorAll('.deck-nav');
+    let idx = -1;
+
+    function go(next) {
+      const n = Math.max(0, Math.min(slides.length - 1, next));
+      if (n === idx) return;
+      if (idx >= 0) slides[idx].classList.remove('on');
+      idx = n;
+      slides[idx].classList.add('on');
+      count.textContent = `${idx + 1} / ${slides.length}`;
+      fill.style.width = `${((idx + 1) / slides.length) * 100}%`;
+      navs[0].disabled = idx === 0;
+      navs[1].disabled = idx === slides.length - 1;
+      // 주소에 위치를 남겨 새로고침·공유 시 같은 페이지가 열리게 한다
+      history.replaceState(null, '', idx === 0 ? location.pathname : `#p${idx + 1}`);
+    }
+
+    const fromHash = /^#p(\d+)$/.exec(location.hash);
+    go(fromHash ? Number(fromHash[1]) - 1 : 0);
+
+    navs.forEach((b) => b.addEventListener('click', () => go(idx + Number(b.dataset.step))));
+    stage.addEventListener('click', (e) => {
+      const restart = e.target.closest('[data-deck-restart]');
+      if (restart) return go(0);
+      if (e.target.closest('a, img, button, video, iframe')) return;
+      if (!e.target.closest('.deck-view')) return;
+      const r = view.getBoundingClientRect();
+      // 왼쪽 1/4 은 이전, 나머지는 다음 — 대부분의 클릭이 "다음"이다
+      go(e.clientX - r.left < r.width * 0.25 ? idx - 1 : idx + 1);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const k = e.key;
+      if (k === 'ArrowRight' || k === 'ArrowDown' || k === 'PageDown' || k === ' ') {
+        e.preventDefault();
+        go(idx + 1);
+      } else if (k === 'ArrowLeft' || k === 'ArrowUp' || k === 'PageUp') {
+        e.preventDefault();
+        go(idx - 1);
+      } else if (k === 'Home') {
+        e.preventDefault();
+        go(0);
+      } else if (k === 'End') {
+        e.preventDefault();
+        go(slides.length - 1);
+      }
+    });
+
+    // 터치: 좌우로 쓸면 넘어간다
+    let touchX = null;
+    view.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    view.addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 48) go(idx + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+  }
+
+  // 캡처를 누르면 원본 크기 별도 창으로 — 딕이든 원문이든 같은 동작
+  document.addEventListener('click', (event) => {
+    if (!(event.target instanceof Element)) return;
+    const img = event.target.closest('.prose img, .deck-fig img');
+    if (!img) return;
+    event.preventDefault();
+    const src = img.currentSrc || img.src;
+    const width = Math.min(img.naturalWidth || 1200, window.screen.availWidth - 80);
+    const height = Math.min(img.naturalHeight || 800, window.screen.availHeight - 140);
+    const opened = window.open(
+      src,
+      'interlinear-capture',
+      `width=${width},height=${height},resizable=yes,scrollbars=yes`
+    );
+    if (!opened) window.open(src, '_blank', 'noopener');
+  });
+</script>

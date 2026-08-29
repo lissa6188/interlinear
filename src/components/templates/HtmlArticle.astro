@@ -1,0 +1,53 @@
+---
+// HTML 템플릿 — 본문을 마크다운 변환기에 통과시키지 않고 그대로 내보낸다.
+// 마크다운은 빈 줄·들여쓰기에 따라 HTML 을 다시 해석해 조작형 콘텐츠를 망가뜨리기
+// 쉽다. 이 템플릿은 머리말 아래 전체를 저자가 쓴 HTML 그대로 싣는다 —
+// <script> 와 <style> 도 함께 실려 그대로 동작한다.
+// 제목·날짜·태그·푸터 등 글의 틀은 노트 템플릿과 똑같이 유지한다.
+import TagList from '../TagList.astro';
+import VideoEmbed from '../VideoEmbed.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  isoDate: string;
+  shortDate: string;
+  minutes: number;
+  tags: string[];
+  video?: string;
+  backHref: string;
+  backLabel: string;
+  contactEmail: string;
+  /** 머리말을 뺀 파일 본문. 마크다운이 아니라 HTML 원문으로 취급한다 */
+  rawBody: string;
+}
+
+const { title, description, isoDate, shortDate, minutes, tags, video, backHref, backLabel, contactEmail, rawBody } = Astro.props;
+---
+
+<main class="wrap" id="main">
+  <article class="sheet">
+    <header class="article-head">
+      <div class="article-meta mono">
+        <time datetime={isoDate}>{shortDate}</time>
+        <span class="article-min">{minutes} min</span>
+      </div>
+      <h1 class="article-t">{title}</h1>
+      <p class="article-d">{description}</p>
+      <TagList tags={tags} class="article-tags" />
+    </header>
+
+    {video && <VideoEmbed src={video} title={`${title} 영상`} />}
+
+    {/* 저자가 쓴 HTML 그대로. prose 를 얹어 두어 일반 문단·목록은 글 페이지와
+        같은 활자로 나오고, 위젯은 저자의 style 이 이긴다 */}
+    <div class="prose" set:html={rawBody} />
+
+    <footer class="article-foot mono">
+      <a href={backHref}>&larr; {backLabel}</a>
+      <a class="foot-end" href={`mailto:${contactEmail}?subject=${encodeURIComponent(title)}`}>
+        이 글로 문의하기
+      </a>
+    </footer>
+  </article>
+</main>

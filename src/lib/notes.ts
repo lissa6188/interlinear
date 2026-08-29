@@ -44,6 +44,11 @@ export function toPlainText(markdown: string): string {
   return markdown
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/<!--[\s\S]*?-->/g, ' ')
+    // HTML 은 통째로 걷어낸다 — html 템플릿의 본문, 마크다운 속 <br> 이 모두 해당된다.
+    // script·style 은 태그만 지우면 코드가 글로 남으므로 내용까지 지운다
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
     .replace(/`([^`]*)`/g, '$1')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')

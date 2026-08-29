@@ -1,0 +1,50 @@
+---
+// 노트 템플릿 — 위에서 아래로 읽는 스크롤 글. 노트의 기본형이고,
+// 스터디 글도 머리말에 template: note 를 적으면 이 모양으로 나온다.
+import TagList from '../TagList.astro';
+import VideoEmbed from '../VideoEmbed.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  isoDate: string;
+  shortDate: string;
+  minutes: number;
+  tags: string[];
+  video?: string;
+  /** 목록으로 돌아가는 링크 — 글이 속한 컬렉션을 따라간다 */
+  backHref: string;
+  backLabel: string;
+  contactEmail: string;
+  Content: any;
+}
+
+const { title, description, isoDate, shortDate, minutes, tags, video, backHref, backLabel, contactEmail, Content } = Astro.props;
+---
+
+<main class="wrap" id="main">
+  <article class="sheet">
+    <header class="article-head">
+      <div class="article-meta mono">
+        <time datetime={isoDate}>{shortDate}</time>
+        <span class="article-min">{minutes} min</span>
+      </div>
+      <h1 class="article-t">{title}</h1>
+      <p class="article-d">{description}</p>
+      <TagList tags={tags} class="article-tags" />
+    </header>
+
+    {video && <VideoEmbed src={video} title={`${title} 영상`} />}
+
+    <div class="prose">
+      <Content />
+    </div>
+
+    <footer class="article-foot mono">
+      <a href={backHref}>&larr; {backLabel}</a>
+      <a class="foot-end" href={`mailto:${contactEmail}?subject=${encodeURIComponent(title)}`}>
+        이 글로 문의하기
+      </a>
+    </footer>
+  </article>
+</main>

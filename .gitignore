@@ -28,3 +28,6 @@ pnpm-debug.log*
 
 # 작업 일지 — 개인 연락처가 들어 있어 저장소에 올리지 않는다
 PlanUpdate.md
+
+# 고양이 스프라이트 원본(시트·사진). 조립된 public/cat/*.webp 만 배포한다
+cat-src/

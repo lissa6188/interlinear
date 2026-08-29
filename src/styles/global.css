@@ -548,3 +548,202 @@ mark{
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* ---------- 스터디 딕 (페이지 넘김) ---------- */
+/* JS가 문서를 슬라이드로 재조립하면 html 에 deck-on 이 붙는다.
+   화면 전체가 한 페이지이므로 문서 스크롤·푸터·장식(고양이·독)을 치운다 */
+html.deck-on body{overflow:hidden}
+html.deck-on .foot,
+html.deck-on .dock,
+html.deck-on .cat-stroll{display:none}
+
+.deck-stage{
+  position:fixed;left:0;right:0;top:var(--mh,57px);bottom:0;
+  background:var(--paper);display:flex;flex-direction:column;z-index:30;
+}
+.deck-view{flex:1;position:relative;overflow:hidden;cursor:default}
+
+.deck-slide{position:absolute;inset:0;display:none;padding:32px var(--pad) 72px}
+.deck-slide.on{
+  display:grid;
+  grid-template-columns:minmax(260px,2fr) 5fr;gap:46px;align-items:stretch;
+  max-width:var(--max);margin:0 auto;width:100%;
+}
+
+/* 표지·끝 페이지는 단이 없다 */
+.deck-slide-cover.on{display:flex;flex-direction:column;justify-content:center;max-width:820px}
+.deck-lede{margin-top:26px;font-size:16px;line-height:1.8;color:var(--ink-2);max-width:640px}
+.deck-lede p{margin:0 0 1em}
+
+/* 캡처 없는 절은 가운데 한 단 */
+.deck-slide-text.on{display:flex;justify-content:center;align-items:center}
+.deck-slide-text .deck-copy{max-width:640px}
+
+/* 영상 페이지는 통째로 */
+.deck-slide-media.on{display:flex;align-items:center;justify-content:center}
+.deck-slide-media .video{width:min(100%,980px);margin:0}
+
+/* 설명이 없는 절에서도 제목이 페이지 중간에 떠 있지 않도록 위에서 시작한다 */
+.deck-copy{min-width:0;max-height:100%;overflow:auto;padding-top:7vh}
+.deck-copy h2{font-size:clamp(21px,2.3vw,28px);line-height:1.35;margin:0 0 20px;letter-spacing:-.01em}
+.deck-copy p{font-size:15px;line-height:1.8;color:var(--ink-2);margin:0 0 1em}
+.deck-copy ol{
+  list-style:circled-num outside;
+  padding-left:2.1em;margin:0;
+  font-size:15px;line-height:1.75;color:var(--ink-2);
+}
+.deck-copy ol li{margin-top:.8em}
+.deck-copy ol li:first-child{margin-top:0}
+.deck-copy ol li::marker{color:var(--ink);font-size:1.5em}
+.deck-copy ul{padding-left:1.2em;font-size:15px;line-height:1.75;color:var(--ink-2)}
+
+.deck-fig{
+  min-width:0;height:100%;margin:0;
+  display:flex;flex-direction:column;gap:12px;align-items:center;justify-content:center;
+}
+.deck-fig img{
+  max-width:100%;max-height:62vh;min-height:0;flex:0 1 auto;object-fit:contain;
+  border:1px solid var(--line);cursor:zoom-in;
+}
+
+.deck-end-mark{font-size:15px;color:var(--gray);margin:0 0 22px}
+.deck-end-nav{display:flex;gap:22px;flex-wrap:wrap;font-size:13px}
+.deck-end-nav a{border-bottom:1px solid transparent}
+.deck-end-nav a:hover{border-color:var(--ink)}
+.deck-end-nav button{
+  font:inherit;border:1px solid var(--ink);background:var(--paper);
+  padding:6px 12px;cursor:pointer;
+}
+.deck-end-nav button:hover{background:var(--ink);color:var(--paper)}
+
+/* 화면 가운데 아래에 떠 있는 작은 상자. 전폭 바는 클릭 이동 거리가 너무 길다 */
+.deck-bar{
+  align-self:center;width:min(46vw,480px);margin:0 0 14px;
+  display:flex;align-items:center;gap:12px;
+  border:1px solid var(--ink);background:var(--paper);
+  padding:7px 12px;font-size:12px;color:var(--ink);
+}
+.deck-nav{
+  font:inherit;width:36px;height:30px;cursor:pointer;
+  border:1px solid var(--ink);background:var(--paper);color:var(--ink);
+}
+.deck-nav:hover:not(:disabled){background:var(--ink);color:var(--paper)}
+.deck-nav:disabled{opacity:.25;cursor:default}
+.deck-count{min-width:56px;text-align:center}
+.deck-progress{flex:1;height:2px;background:var(--line)}
+.deck-progress i{display:block;height:100%;width:0;background:var(--ink);transition:width .25s}
+
+@media (max-width:860px){
+  .deck-slide.on{grid-template-columns:1fr;grid-template-rows:minmax(0,1.1fr) minmax(0,1fr);gap:14px;padding:14px var(--pad) 62px}
+  .deck-fig{order:-1}
+  .deck-copy{padding-top:0}
+  .deck-bar{width:min(80vw,480px);margin-bottom:10px}
+}
+
+/* ---------- 플로팅 독 (오늘 본 글 + 버튼) ---------- */
+.dock{
+  position:fixed;right:18px;bottom:18px;z-index:60;
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  font-family:var(--mono);
+}
+.dock-seen{
+  background:var(--paper);border:1px solid var(--ink);
+  padding:8px 10px 10px;max-width:min(62vw,560px);
+}
+.dock-seen-head{display:flex;align-items:center;gap:12px;font-size:11px;color:var(--gray)}
+.dock-seen-head span{margin-right:auto}
+.dock-seen-head button{
+  font:inherit;background:none;border:none;padding:0;cursor:pointer;color:var(--gray);
+}
+.dock-seen-head button:hover{color:var(--ink)}
+.dock-seen-list{
+  display:flex;gap:6px;list-style:none;margin:7px 0 0;padding:0;
+  overflow-x:auto;
+}
+.dock-tile{
+  flex:0 0 auto;width:44px;height:44px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line-2);background:var(--paper-2);
+  color:var(--ink);font-size:16px;text-decoration:none;
+}
+.dock-tile:hover{border-color:var(--ink)}
+.dock-tile img{width:100%;height:100%;object-fit:cover}
+.dock-unfold{
+  font:inherit;font-size:11px;cursor:pointer;
+  border:1px solid var(--ink);background:var(--paper);color:var(--ink);
+  padding:6px 10px;
+}
+.dock-unfold:hover{background:var(--ink);color:var(--paper)}
+.dock-btns{display:flex;gap:8px}
+.dock-btn{
+  font-family:var(--mono);font-size:12.5px;font-weight:500;
+  padding:11px 16px;border:1px solid var(--ink);
+  background:var(--ink);color:var(--paper);text-decoration:none;cursor:pointer;
+}
+.dock-btn:hover{background:var(--paper);color:var(--ink)}
+.dock-btn small{opacity:.6;margin-left:5px;font-size:10.5px}
+.dock-btn-ghost{
+  background:var(--paper);color:var(--gray-2);
+  border:1px dashed var(--line-2);cursor:default;
+}
+.dock-btn-ghost:hover{background:var(--paper);color:var(--gray-2)}
+/* 좁은 화면에서는 본문을 가리므로 치운다 */
+@media (max-width:719px){.dock{display:none}}
+
+/* ---------- 어슬렁거리는 고양이 ---------- */
+/* 연필 소묘 스프라이트(public/cat/*.webp). 프레임 크기는 make-cat 스크립트가
+   출력한 값의 절반(레티나 2배 제작)이다. 상태는 data-state 로 갈아탄다 */
+.cat-stroll{
+  position:fixed;left:0;bottom:0;z-index:35;
+  pointer-events:none;
+}
+.cat-sprite{
+  pointer-events:auto;cursor:pointer;
+  background-repeat:no-repeat;background-position:0 0;
+}
+.cat-stroll .cat-sprite{transition:transform .25s}
+.cat-stroll.flip .cat-sprite{transform:scaleX(-1)}
+.cat-stroll.hop .cat-sprite{animation:cat-hop .5s ease}
+.cat-stroll.flip.hop .cat-sprite{animation:cat-hop-flip .5s ease}
+
+/* 걷기: 8프레임 스트립을 steps 로 끊어 넘긴다. 이동 속도와 다리 속도가 따로 논다 */
+[data-state="walk"] .cat-sprite{
+  width:121.5px;height:60px;
+  background-image:url('/cat/walk.webp');background-size:972px 60px;
+  animation:cat-walkcycle .8s steps(8) infinite;
+}
+/* 그루밍: 발 핥기 2프레임 루프 */
+[data-state="groom"] .cat-sprite{
+  width:107px;height:75.5px;
+  background-image:url('/cat/groom.webp');background-size:214px 75.5px;
+  animation:cat-groomcycle 1.15s steps(2) infinite;
+}
+[data-state="sit"] .cat-sprite{
+  width:66.5px;height:86.5px;
+  background-image:url('/cat/sit.webp');background-size:66.5px 86.5px;
+}
+[data-state="sleep"] .cat-sprite{
+  width:81.5px;height:79.5px;
+  background-image:url('/cat/sleep.webp');background-size:81.5px 79.5px;
+}
+[data-state="stretch"] .cat-sprite{
+  width:137.5px;height:66.5px;
+  background-image:url('/cat/stretch.webp');background-size:137.5px 66.5px;
+}
+
+.cat-bubble{
+  position:absolute;left:64px;bottom:100%;margin-bottom:4px;
+  background:var(--paper);border:1px solid var(--ink);
+  padding:4px 9px;font-size:11px;white-space:nowrap;color:var(--ink);
+}
+
+@keyframes cat-walkcycle{to{background-position-x:-972px}}
+@keyframes cat-groomcycle{to{background-position-x:-214px}}
+@keyframes cat-hop{0%{transform:translateY(0)}35%{transform:translateY(-11px)}70%{transform:translateY(1px)}100%{transform:translateY(0)}}
+@keyframes cat-hop-flip{0%{transform:scaleX(-1) translateY(0)}35%{transform:scaleX(-1) translateY(-11px)}70%{transform:scaleX(-1) translateY(1px)}100%{transform:scaleX(-1) translateY(0)}}
+/* 움직임 최소화: 모든 고양이 애니메이션을 멈춘다 (JS 도 앉은 상태로만 둔다) */
+@media (prefers-reduced-motion:reduce){
+  .cat-stroll *,.cat-stroll .cat-sprite{animation:none!important;transition:none!important}
+}
+/* 좁은 화면에서는 여백이 없어 본문을 밟는다 — 치운다 */
+@media (max-width:719px){.cat-stroll{display:none}}
