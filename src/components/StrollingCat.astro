@@ -1,20 +1,26 @@
 ---
 // 화면 아래 여백을 어슬렁거리는 고양이.
 // 우리집 삼색이 사진을 Gemini 로 연필 소묘 스프라이트 시트로 그려
-// (사이트 소개 그림과 같은 그림체), 프레임을 잘라 애니메이션으로 조립했다.
-// 원본 시트: cat-src/ (저장소·배포에서 제외), 조립: public/cat/*.webp
-// 장식일 뿐이므로 스크린리더에는 숨기고, 움직임 최소화 설정에서는
-// 걷지 않고 앉아만 있는다.
+// 프레임을 잘라 조립했다. 원본 시트: cat-src/ (저장소·배포 제외),
+// 조립본: public/cat/*.webp, 프레임 정보: src/lib/cat-sprites.json.
+//
+// 행동 규칙 — 왼끝↔오른끝 순찰이 기본이고, 걷는 중간에 랜덤 행동이 끼어든다.
+//   · 오른쪽 끝에 닿으면 벽을 짚고 섰다가 내려와서 돈다
+//   · 방향 전환은 웅크려 도는 3컷을 정방향 → (가장 뭉친 컷에서 반전) → 역방향으로
+//     재생해 좌우 반전이 눈에 띄지 않게 한다
+//   · 걷다가: 그루밍 / 앉기 / 기지개 / 엎드리기 / 뒹굴기 / 웅크려 잠
+// 장식일 뿐이므로 스크린리더에는 숨기고, 움직임 최소화 설정에서는 앉아만 있는다.
 ---
 
-<div class="cat-stroll" data-state="sit" aria-hidden="true">
+<div class="cat-stroll" aria-hidden="true">
   <div class="cat-bubble mono" hidden></div>
   <div class="cat-sprite"></div>
 </div>
 
 <script>
   // @ts-nocheck — 의도적으로 순수 자바스크립트다.
-  // 상태 기계: 걷기 → (앉기 | 그루밍 | 잠) → 다시 걷기. 잠에서 깨면 기지개.
+  import SPR from '../lib/cat-sprites.json';
+
   const el = document.querySelector('.cat-stroll');
 
   if (el) {
@@ -22,88 +28,194 @@
     const bubble = el.querySelector('.cat-bubble');
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // 첫 상태 전환에서 이미지가 늦게 떠 깜빡이지 않게 미리 받아 둔다
-    for (const n of ['walk', 'sit', 'groom', 'sleep', 'stretch']) {
-      new Image().src = `/cat/${n}.webp`;
-    }
+    // 첫 전환에서 깜빡이지 않게 전부 미리 받아 둔다
+    for (const n of Object.keys(SPR)) new Image().src = `/cat/${n}.webp`;
 
-    const PAD = 12;
-    const SPEED = 42; // px/s — 급할 것 없는 속도
-    // 오른쪽 플로팅 독 자리는 밟지 않는다
-    const maxX = () => Math.max(140, Math.min(window.innerWidth * 0.62, window.innerWidth - 300));
-
+    const FPS = 130; // 프레임 간격(ms). 소묘풍은 약간 느린 편이 어울린다
+    const PAD = 10;
+    const SPEED = 46; // 이동 px/s
+    let flip = false; // true = 왼쪽 보기
     let x = 24;
-    let timer = null;
+    let dir = 1; // 1 = 오른쪽으로 순찰 중
+    let gen = 0; // 취소 토큰 — 올리면 진행 중인 모든 대기가 끝난다
+    let curAnim = null;
+
     el.style.transform = `translateX(${x}px)`;
 
-    const later = (fn, ms) => { clearTimeout(timer); timer = setTimeout(fn, ms); };
-    const set = (state) => { el.dataset.state = state; };
+    const setFlip = (f) => { flip = f; el.classList.toggle('flip', f); };
 
-    function idle() {
-      el.style.transition = 'none';
-      const r = Math.random();
-      if (r < 0.18) {
-        // 잠은 길게. 깨어나면 기지개를 켜고 움직인다
-        set('sleep');
-        later(wake, 12000 + Math.random() * 14000);
-      } else if (r < 0.45) {
-        set('groom');
-        later(walk, 5000 + Math.random() * 5000);
-      } else {
-        set('sit');
-        later(walk, 4000 + Math.random() * 7000);
+    function show(name, i = 0) {
+      const s = SPR[name];
+      if (curAnim !== name) {
+        curAnim = name;
+        el.dataset.state = name;
+        sprite.style.width = s.w + 'px';
+        sprite.style.height = s.h + 'px';
+        sprite.style.backgroundImage = `url('/cat/${name}.webp')`;
+        sprite.style.backgroundSize = `${s.w * s.n}px ${s.h}px`;
       }
+      sprite.style.backgroundPosition = `${-i * s.w}px 0`;
     }
 
-    function wake() {
-      set('stretch');
-      later(walk, 1700);
+    // ms 를 기다린다. 그 사이 취소되면 false
+    const wait = (ms, g) => new Promise((r) => setTimeout(() => r(g === gen), ms));
+    const range = (n) => [...Array(n).keys()];
+    const rand = (a, b) => a + Math.random() * (b - a);
+
+    // 프레임 나열을 순서대로 재생한다. [0,1,2,1,2,3] 처럼 반복·역행도 그대로
+    async function play(name, pattern, ms = FPS) {
+      const g = gen;
+      for (const i of pattern) {
+        if (g !== gen) return false;
+        show(name, i);
+        if (!(await wait(ms, g))) return false;
+      }
+      return true;
     }
 
-    function walk() {
-      const target = PAD + Math.random() * (maxX() - PAD);
+    // 걷는 범위. 오른쪽 끝은 플로팅 독 바로 앞 — 독이 벽 노릇을 한다
+    function limits() {
+      const w = SPR.walk.w;
+      let right = window.innerWidth - w - 10;
+      const dock = document.querySelector('.dock');
+      if (dock && getComputedStyle(dock).display !== 'none') {
+        right = Math.min(right, dock.getBoundingClientRect().left - w - 6);
+      }
+      return { left: PAD, right: Math.max(PAD + 120, right) };
+    }
+
+    // 취소로 이동이 끊겼을 때 실제 위치를 읽어 x 를 맞춘다
+    function syncX() {
+      const m = new DOMMatrixReadOnly(getComputedStyle(el).transform);
+      if (Number.isFinite(m.m41)) x = m.m41;
+      el.style.transition = 'none';
+      el.style.transform = `translateX(${x}px)`;
+    }
+
+    async function walkTo(target) {
+      const g = gen;
       const dist = Math.abs(target - x);
-      if (dist < 40) return idle();
-      el.classList.toggle('flip', target < x);
-      set('walk');
+      if (dist < 8) return true;
+      setFlip(target < x);
       const dur = dist / SPEED;
       el.style.transition = `transform ${dur}s linear`;
       requestAnimationFrame(() => {
         x = target;
         el.style.transform = `translateX(${x}px)`;
       });
-      later(idle, dur * 1000 + 80);
+      const until = performance.now() + dur * 1000;
+      let i = 0;
+      while (performance.now() < until) {
+        if (g !== gen) return syncX(), false;
+        show('walk', i++ % SPR.walk.n);
+        if (!(await wait(FPS * 0.75, g))) return syncX(), false;
+      }
+      el.style.transition = 'none';
+      return true;
+    }
+
+    // ---- 행동들. 전부 "취소되면 false" 규칙을 따른다 ----
+    async function doTurn() {
+      if (!(await play('turn', [0, 1, 2], 150))) return false;
+      setFlip(!flip); // 가장 뭉친 컷에서 뒤집는다
+      return play('turn', [2, 1, 0], 150);
+    }
+    async function doWall() {
+      if (!(await play('standup', [0, 1, 2, 3], 170))) return false;
+      if (!(await wait(rand(1500, 2600), gen))) return false;
+      return play('standup', [3, 2, 1, 0], 170); // 뒷걸음으로 내려온다
+    }
+    async function doStretch() {
+      if (!(await play('stretch', range(8), 150))) return false;
+      return wait(500, gen);
+    }
+    async function doLaydown() {
+      if (!(await play('laydown', [0, 1, 2, 3], 180))) return false;
+      if (!(await wait(rand(4000, 9000), gen))) return false; // 엎드려 쉰다
+      return play('laydown', [4, 5, 6, 7], 180);
+    }
+    async function doRoll() {
+      // 벌러덩 → 좌우로 몇 번 뒹굴 → 몸을 말았다가 일어난다
+      return play('roll', [0, 1, 2, 1, 2, 1, 2, 3, 4], 220);
+    }
+    async function doGroom() {
+      const name = Math.random() < 0.4 ? 'groomb' : 'grooma';
+      const reps = 2 + Math.floor(Math.random() * 3);
+      const pat = [];
+      for (let r = 0; r < reps; r++) pat.push(...range(SPR[name].n));
+      return play(name, pat, 320);
+    }
+    async function doSit() { show('sit'); return wait(rand(3000, 7000), gen); }
+    async function doSleep() { show('sleep'); return wait(rand(9000, 16000), gen); }
+
+    const ACTIONS = [
+      [doGroom, 30], [doSit, 20], [doStretch, 14], [doLaydown, 14], [doRoll, 14], [doSleep, 8],
+    ];
+    function pickAction() {
+      let r = Math.random() * ACTIONS.reduce((s, [, w]) => s + w, 0);
+      for (const [fn, w] of ACTIONS) if ((r -= w) < 0) return fn;
+      return doGroom;
+    }
+
+    // ---- 본체: 순찰 루프 ----
+    async function live() {
+      const g = ++gen;
+      show('sit');
+      if (!(await wait(2200, g))) return;
+      while (g === gen) {
+        const edge = dir > 0 ? limits().right : limits().left;
+        // 끝까지 몇 구간으로 나눠 걷고, 구간 사이에 랜덤 행동을 끼운다
+        while (Math.abs(edge - x) > 30) {
+          if (g !== gen) return;
+          const remain = edge - x;
+          const seg = Math.sign(remain) * Math.min(Math.abs(remain), rand(180, window.innerWidth * 0.4));
+          if (!(await walkTo(x + seg))) return;
+          if (Math.abs(edge - x) > 30 && Math.random() < 0.6) {
+            if (!(await pickAction()())) return;
+          }
+        }
+        // 끝 도착. 오른쪽이면 벽을 짚고 선다
+        if (dir > 0) { if (!(await doWall())) return; }
+        else if (Math.random() < 0.35) { if (!(await doLaydown())) return; }
+        if (!(await doTurn())) return;
+        dir = -dir;
+      }
     }
 
     if (reduce) {
-      set('sit');
+      show('sit');
     } else {
-      later(walk, 2500);
+      live();
 
       window.addEventListener('resize', () => {
-        if (x > maxX()) {
-          x = Math.max(PAD, maxX() - 20);
-          el.style.transition = 'none';
-          el.style.transform = `translateX(${x}px)`;
-        }
+        const { right } = limits();
+        if (x > right) { x = right; syncX(); }
       });
 
       // 탭이 안 보이는 동안은 시계를 세운다
       document.addEventListener('visibilitychange', () => {
-        if (document.hidden) clearTimeout(timer);
-        else later(walk, 1500);
+        if (document.hidden) { gen++; syncX(); show('sit'); }
+        else live();
       });
     }
 
-    // 쓰다듬으면(클릭) 대답한다. 자다가 깨면 기지개부터
+    // 쓰다듬으면(클릭) 대답한다. 자고 있었다면 기지개를 켜고 일어난다
     const WORDS = ['야옹', '골골골', '냐-', '…'];
     sprite.addEventListener('click', () => {
-      const sleeping = el.dataset.state === 'sleep';
-      bubble.textContent = sleeping ? '…!' : WORDS[Math.floor(Math.random() * WORDS.length)];
+      const lying = curAnim === 'sleep' || curAnim === 'laydown';
+      bubble.textContent = lying ? '…!' : WORDS[Math.floor(Math.random() * WORDS.length)];
       bubble.hidden = false;
       setTimeout(() => { bubble.hidden = true; }, 1600);
       if (reduce) return;
-      if (sleeping) return wake();
+      if (lying) {
+        gen++; syncX();
+        (async () => {
+          const g = gen;
+          await play('stretch', range(8), 140);
+          if (g === gen) live();
+        })();
+        return;
+      }
       el.classList.add('hop');
       setTimeout(() => el.classList.remove('hop'), 500);
     });
