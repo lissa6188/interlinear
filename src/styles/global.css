@@ -605,15 +605,13 @@ html.deck-on .cat-stroll{display:none}
   border:1px solid var(--line);cursor:zoom-in;
 }
 
-.deck-end-mark{font-size:15px;color:var(--gray);margin:0 0 22px}
-.deck-end-nav{display:flex;gap:22px;flex-wrap:wrap;font-size:13px}
-.deck-end-nav a{border-bottom:1px solid transparent}
-.deck-end-nav a:hover{border-color:var(--ink)}
-.deck-end-nav button{
-  font:inherit;border:1px solid var(--ink);background:var(--paper);
-  padding:6px 12px;cursor:pointer;
+/* 목록·문의 링크 — 진행 바 바로 위, 모든 페이지에서 보인다 */
+.deck-links{
+  align-self:center;display:flex;gap:26px;
+  font-size:12px;margin:0 0 8px;
 }
-.deck-end-nav button:hover{background:var(--ink);color:var(--paper)}
+.deck-links a{color:var(--gray);border-bottom:1px solid transparent}
+.deck-links a:hover{color:var(--ink);border-color:var(--ink)}
 
 /* 화면 가운데 아래에 떠 있는 작은 상자. 전폭 바는 클릭 이동 거리가 너무 길다 */
 .deck-bar{

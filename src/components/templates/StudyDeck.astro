@@ -127,17 +127,13 @@ const { title, description, isoDate, shortDate, minutes, tags, video, backHref, 
       }
     }
 
-    // 끝 페이지: 목록·문의로 이어지는 출구
-    const end = addSlide('deck-slide-cover deck-slide-end');
-    end.innerHTML =
-      '<p class="deck-end-mark mono">끝.</p>' +
-      '<nav class="deck-end-nav mono">' +
+    // ---- 3. 목록·문의 링크와 진행 바. 링크는 모든 페이지에서 보인다 ----
+    const links = document.createElement('nav');
+    links.className = 'deck-links mono';
+    links.innerHTML =
       `<a href="${sheet.dataset.backHref}">&larr; ${sheet.dataset.backLabel}</a>` +
-      `<a href="${sheet.dataset.contact}">이 글로 문의하기</a>` +
-      '<button type="button" data-deck-restart>처음부터 다시</button>' +
-      '</nav>';
+      `<a href="${sheet.dataset.contact}">이 글로 문의하기</a>`;
 
-    // ---- 3. 진행 바 ----
     const bar = document.createElement('div');
     bar.className = 'deck-bar mono';
     bar.innerHTML =
@@ -145,6 +141,7 @@ const { title, description, isoDate, shortDate, minutes, tags, video, backHref, 
       `<span class="deck-count" aria-live="polite">1 / ${slides.length}</span>` +
       '<span class="deck-progress"><i></i></span>' +
       '<button type="button" class="deck-nav" data-step="1" aria-label="다음 페이지">&rarr;</button>';
+    stage.appendChild(links);
     stage.appendChild(bar);
 
     // ---- 4. 전환: 원문을 숨기고 무대를 올린다 ----
@@ -188,8 +185,6 @@ const { title, description, isoDate, shortDate, minutes, tags, video, backHref, 
 
     navs.forEach((b) => b.addEventListener('click', () => go(idx + Number(b.dataset.step))));
     stage.addEventListener('click', (e) => {
-      const restart = e.target.closest('[data-deck-restart]');
-      if (restart) return go(0);
       if (e.target.closest('a, img, button, video, iframe')) return;
       if (!e.target.closest('.deck-view')) return;
       const r = view.getBoundingClientRect();
