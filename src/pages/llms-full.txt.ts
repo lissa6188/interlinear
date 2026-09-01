@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { SITE } from '../lib/site';
+import { normalizeCaptureLinks } from '../lib/captures';
 
 // 모든 노트의 본문을 한 파일에 담는다. 컨텍스트에 사이트 전체를 한 번에
 // 올려야 하는 도구를 위한 것. 글이 수십 편을 넘으면 분리를 검토한다.
@@ -24,7 +25,7 @@ export const GET: APIRoute = async () => {
 태그: ${entry.data.tags.join(', ') || '없음'}
 요약: ${entry.data.description}
 
-${entry.body ?? ''}`;
+${normalizeCaptureLinks(entry.body ?? '')}`;
     })
     .join('\n\n---\n\n');
 

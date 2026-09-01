@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { SITE } from '../../lib/site';
+import { normalizeCaptureLinks } from '../../lib/captures';
 
 // /notes/xxx.md — 같은 글의 마크다운 원문.
 // 에이전트가 HTML에서 본문을 추려내다 메뉴·푸터까지 인용하는 사고를 막는다.
@@ -23,7 +24,7 @@ author: ${SITE.author}
 source: ${SITE.url}/notes/${note.id}/
 ---
 
-${note.body ?? ''}`;
+${normalizeCaptureLinks(note.body ?? '')}`;
 
   return new Response(body, {
     headers: { 'Content-Type': 'text/markdown; charset=utf-8' },

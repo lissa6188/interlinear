@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { aliasTerms, buildHaystack } from './search';
+import { normalizeCaptureUrl } from './captures';
 import { PRODUCTS } from './site';
 
 /** 노트(제품별 실무 기록)와 스터디(캡처 실습) 두 갈래를 같은 모양으로 다룬다 */
@@ -75,7 +76,9 @@ const BASE_PATH: Record<Kind, string> = { note: '/notes', study: '/study' };
 
 /** 본문에서 첫 이미지 주소를 뽑는다. 썸네일을 따로 안 적었을 때의 기본값 */
 function firstImage(markdown: string): string | undefined {
-  return markdown.match(/!\[[^\]]*\]\(\s*([^)\s]+)/)?.[1];
+  const src = markdown.match(/!\[[^\]]*\]\(\s*([^)\s]+)/)?.[1];
+  // 붙여넣기가 만든 상대 경로는 목록 페이지에서 깨진다 — /captures/… 로
+  return src ? normalizeCaptureUrl(src) : undefined;
 }
 
 function toNote(entry: CollectionEntry<'blog' | 'study'>, kind: Kind): Note {

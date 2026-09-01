@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
 import { SITE } from '../../lib/site';
+import { normalizeCaptureLinks } from '../../lib/captures';
 
 // /study/xxx.md — 같은 글의 마크다운 원문 (노트 쪽과 같은 규칙)
 export async function getStaticPaths() {
@@ -22,7 +23,7 @@ author: ${SITE.author}
 source: ${SITE.url}/study/${study.id}/
 ---
 
-${study.body ?? ''}`;
+${normalizeCaptureLinks(study.body ?? '')}`;
 
   return new Response(body, {
     headers: { 'Content-Type': 'text/markdown; charset=utf-8' },

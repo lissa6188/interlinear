@@ -1,0 +1,8 @@
+{
+  // 글(.md)에 이미지를 붙여넣으면(Ctrl+V) 파일이 여기로 저장되고 링크가 삽입된다.
+  // 글마다 폴더가 생겨 캡처가 섞이지 않는다: public/captures/<글이름>/image-1.png
+  // 삽입되는 상대 경로는 빌드가 /captures/… 로 바꿔 준다 (src/lib/captures.ts)
+  "markdown.copyFiles.destination": {
+    "/src/content/**/*": "${documentWorkspaceFolder}/public/captures/${documentBaseName}/"
+  }
+}
