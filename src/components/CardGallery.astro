@@ -133,14 +133,14 @@ const { images, title } = Astro.props;
   .card-gallery-count b{color:var(--ink)}
   .card-gallery-track{
     display:flex;gap:var(--gallery-gap);overflow-x:auto;scroll-snap-type:x mandatory;
-    overscroll-behavior-inline:contain;scrollbar-width:none;padding:0;
+    overscroll-behavior-inline:contain;scrollbar-width:none;padding:calc(var(--card-w) * .11) 0;
   }
   .card-gallery-track::-webkit-scrollbar{display:none}
   .card-gallery-item{
     flex:0 0 var(--card-w);scroll-snap-align:center;scroll-snap-stop:always;
-    opacity:.48;transform:scale(.965);transition:opacity .2s ease-out,transform .2s ease-out;
+    position:relative;opacity:.48;transform:scale(.965);transition:opacity .2s ease-out,transform .2s ease-out;
   }
-  .card-gallery-item[data-active]{opacity:1;transform:none}
+  .card-gallery-item[data-active]{opacity:1;transform:scale(1.2);z-index:1}
   .card-gallery-item a{display:block;border:1px solid var(--line);background:var(--paper-2)}
   .card-gallery-item[data-active] a{border-color:var(--ink)}
   .card-gallery-item picture,.card-gallery-item img{display:block;width:100%;height:auto}
