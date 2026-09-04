@@ -1,0 +1,171 @@
+---
+import { optimizedImageUrl } from '../lib/images';
+
+interface Props {
+  images: string[];
+  title: string;
+}
+
+const { images, title } = Astro.props;
+---
+
+<section class="card-gallery" data-card-gallery aria-label={`${title} 카드뉴스`} aria-roledescription="carousel">
+  <div class="card-gallery-head">
+    <p class="card-gallery-label mono">카드뉴스</p>
+    <p class="card-gallery-count mono" aria-live="polite">
+      <b data-card-current>1</b> / {images.length}
+    </p>
+  </div>
+
+  <div class="card-gallery-track" data-card-track tabindex="0">
+    <div class="card-gallery-edge card-gallery-edge-start" aria-hidden="true">
+      <b class="mono">01</b><span class="mono">시작</span>
+    </div>
+    {
+      images.map((src, index) => (
+        <figure
+          class="card-gallery-item"
+          data-card-item
+          data-active={index === 0 ? '' : undefined}
+          aria-label={`${images.length}장 중 ${index + 1}번째`}
+          aria-roledescription="slide"
+          aria-current={index === 0 ? 'true' : 'false'}
+        >
+          <a href={src} target="_blank" rel="noopener" aria-label={`${index + 1}번째 카드 원본 보기`}>
+            <picture>
+              {optimizedImageUrl(src) !== src && <source srcset={optimizedImageUrl(src)} type="image/webp" />}
+              <img
+                src={src}
+                alt={`${title} 카드뉴스 ${index + 1}/${images.length}`}
+                width="1024"
+                height="1024"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </picture>
+          </a>
+        </figure>
+      ))
+    }
+    <div class="card-gallery-edge card-gallery-edge-end" aria-hidden="true">
+      <b class="mono">{String(images.length).padStart(2, '0')}</b><span class="mono">끝</span>
+    </div>
+  </div>
+
+  <div class="card-gallery-nav">
+    <button type="button" data-card-prev aria-label="이전 카드">&larr; 이전</button>
+    <span class="card-gallery-help">&larr; &rarr; 한 장씩 이동 · 아래에서 본문이 이어집니다</span>
+    <button type="button" data-card-next aria-label="다음 카드">다음 &rarr;</button>
+  </div>
+</section>
+
+<script>
+  document.querySelectorAll('[data-card-gallery]').forEach((gallery) => {
+    const track = gallery.querySelector('[data-card-track]');
+    const items = [...gallery.querySelectorAll('[data-card-item]')];
+    const current = gallery.querySelector('[data-card-current]');
+    const prev = gallery.querySelector('[data-card-prev]');
+    const next = gallery.querySelector('[data-card-next]');
+    if (!(track instanceof HTMLElement) || !current || !(prev instanceof HTMLButtonElement) || !(next instanceof HTMLButtonElement)) return;
+
+    let active = 0;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const update = () => {
+      const center = track.getBoundingClientRect().left + track.clientWidth / 2;
+      active = items.reduce((best, item, index) =>
+        Math.abs(item.getBoundingClientRect().left + item.clientWidth / 2 - center) <
+        Math.abs(items[best].getBoundingClientRect().left + items[best].clientWidth / 2 - center) ? index : best, 0);
+      items.forEach((item, index) => {
+        item.toggleAttribute('data-active', index === active);
+        item.setAttribute('aria-current', index === active ? 'true' : 'false');
+      });
+      current.textContent = String(active + 1);
+      prev.disabled = active === 0;
+      next.disabled = active === items.length - 1;
+    };
+
+    const go = (index: number) => {
+      items[Math.max(0, Math.min(index, items.length - 1))]?.scrollIntoView({
+        behavior: reducedMotion ? 'auto' : 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    };
+
+    let frame = 0;
+    track.addEventListener('scroll', () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    }, { passive: true });
+    items.forEach((item, index) => {
+      item.addEventListener('click', (event) => {
+        if (index === active) return;
+        event.preventDefault();
+        go(index);
+      });
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
+      const rect = gallery.getBoundingClientRect();
+      if (rect.bottom <= 0 || rect.top >= window.innerHeight) return;
+      if (event.key === 'ArrowLeft') { event.preventDefault(); go(active - 1); }
+      if (event.key === 'ArrowRight') { event.preventDefault(); go(active + 1); }
+    });
+    prev.addEventListener('click', () => go(active - 1));
+    next.addEventListener('click', () => go(active + 1));
+    window.addEventListener('resize', () => go(active));
+    update();
+  });
+</script>
+
+<style>
+  .card-gallery{
+    --gallery-gap:14px;
+    --gallery-w:min(900px,calc(100vw - var(--pad) * 2));
+    --card-w:calc((var(--gallery-w) - var(--gallery-gap) * 2) / 3);
+    width:var(--gallery-w);margin:0 0 34px calc((100% - var(--gallery-w)) / 2);
+  }
+  .card-gallery-head{display:flex;align-items:baseline;margin-bottom:10px}
+  .card-gallery-label{font-weight:700}
+  .card-gallery-count{margin-left:auto;color:var(--gray)}
+  .card-gallery-count b{color:var(--ink)}
+  .card-gallery-track{
+    display:flex;gap:var(--gallery-gap);overflow-x:auto;scroll-snap-type:x mandatory;
+    overscroll-behavior-inline:contain;scrollbar-width:none;padding:0;
+  }
+  .card-gallery-track::-webkit-scrollbar{display:none}
+  .card-gallery-item{
+    flex:0 0 var(--card-w);scroll-snap-align:center;scroll-snap-stop:always;
+    opacity:.48;transform:scale(.965);transition:opacity .2s ease-out,transform .2s ease-out;
+  }
+  .card-gallery-item[data-active]{opacity:1;transform:none}
+  .card-gallery-item a{display:block;border:1px solid var(--line);background:var(--paper-2)}
+  .card-gallery-item[data-active] a{border-color:var(--ink)}
+  .card-gallery-item picture,.card-gallery-item img{display:block;width:100%;height:auto}
+  .card-gallery-edge{
+    position:relative;flex:0 0 var(--card-w);aspect-ratio:1;overflow:hidden;
+    border:1px solid var(--line);background:var(--paper-2);color:var(--gray-2);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  }
+  .card-gallery-edge b{font-size:38px;font-weight:400;line-height:1;color:var(--line-2)}
+  .card-gallery-edge span{color:var(--gray)}
+  .card-gallery-nav{display:flex;align-items:center;gap:14px;margin-top:8px}
+  .card-gallery-nav button{
+    font-family:var(--mono);font-size:11px;letter-spacing:.02em;
+    border-bottom:1px solid var(--ink);padding:4px 0;
+  }
+  .card-gallery-nav button:disabled{color:var(--gray-2);border-color:transparent;cursor:default}
+  .card-gallery-help{margin:auto;color:var(--gray);font-size:12px}
+  @media (max-width:640px){
+    .card-gallery{
+      --gallery-gap:10px;--gallery-w:calc(100vw - var(--pad) * 2);
+      --card-w:min(72vw,280px);margin-bottom:30px;
+    }
+    .card-gallery-edge{flex-basis:max(12px,calc((var(--gallery-w) - var(--card-w)) / 2 - var(--gallery-gap)))}
+    .card-gallery-edge b,.card-gallery-edge span{display:none}
+    .card-gallery-help{font-size:11px;text-align:center;line-height:1.4}
+    .card-gallery-nav button:last-child{margin-left:auto}
+  }
+</style>

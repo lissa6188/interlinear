@@ -4,14 +4,14 @@ description: "2026년 9월 릴리스 플랜 종료를 앞두고 관리자가 챙
 date: 2026-09-02
 tags: ["Dynamics 365", "D365 Sales", "릴리스 웨이브", "AI at Work roadmap", "CRM 관리자"]
 category: "Dynamics 365 CRM"
+cards:
+  - /cards/d365-sales-2026-wave1/card-01.png
+  - /cards/d365-sales-2026-wave1/card-02.png
+  - /cards/d365-sales-2026-wave1/card-03.png
+  - /cards/d365-sales-2026-wave1/card-04.png
+  - /cards/d365-sales-2026-wave1/card-05.png
+  - /cards/d365-sales-2026-wave1/card-06.png
 ---
-
-![](/cards/d365-sales-2026-wave1/card-01.png)
-![](/cards/d365-sales-2026-wave1/card-02.png)
-![](/cards/d365-sales-2026-wave1/card-03.png)
-![](/cards/d365-sales-2026-wave1/card-04.png)
-![](/cards/d365-sales-2026-wave1/card-05.png)
-![](/cards/d365-sales-2026-wave1/card-06.png)
 
 어제도 릴리스 플랜 문서를 열어 보셨나요? 반기마다 새 기능을 확인하고, 팀에 공지하고, 테스트 일정을 잡던 그 루틴 말이에요. 그 루틴이 이번 웨이브를 끝으로 바뀝니다. 2026년 9월부터 릴리스 플랜 발행이 중단되거든요.
 

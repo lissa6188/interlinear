@@ -1,5 +1,7 @@
 # build output
 dist/
+# 빌드 전에 원본에서 다시 만드는 이미지 파생본
+public/**/*.optimized.webp
 # generated types
 .astro/
 

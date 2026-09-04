@@ -1,3 +1,5 @@
+import { optimizedImageUrl } from './images';
+
 // 캡처 붙여넣기 경로 정규화.
 //
 // VS Code 는 마크다운에 이미지를 붙여넣으면(Ctrl+V) 파일을
@@ -29,10 +31,34 @@ export function normalizeCaptureLinks(markdown: string): string {
  */
 export function remarkNormalizeCaptures() {
   function walk(node: { type?: string; url?: string; value?: string; children?: unknown[] }) {
-    if (node.type === 'image' && node.url) node.url = normalizeCaptureUrl(node.url);
+    if (node.type === 'image' && node.url) {
+      node.url = normalizeCaptureUrl(node.url);
+    }
     // 본문에 직접 쓴 <img src="…"> 도 같은 규칙을 탄다
     if (node.type === 'html' && node.value) node.value = normalizeCaptureLinks(node.value);
     if (Array.isArray(node.children)) node.children.forEach((child) => walk(child as never));
   }
   return (tree: never) => walk(tree);
+}
+
+/** Sätteri HAST 단계에서 최적화 파생본을 브라우저 후보로 붙인다. */
+export function satteriOptimizeImages() {
+  return {
+    name: 'optimized-image-source',
+    element: {
+      filter: ['img'],
+      visit(
+        node: Readonly<{ properties?: Record<string, unknown> }>,
+        ctx: { setProperty(node: Readonly<unknown>, key: string, value: unknown): void }
+      ) {
+        const src = node.properties?.src;
+        if (typeof src !== 'string') return;
+        const optimized = optimizedImageUrl(src);
+        if (optimized === src) return;
+        ctx.setProperty(node, 'srcSet', optimized);
+        ctx.setProperty(node, 'loading', 'lazy');
+        ctx.setProperty(node, 'decoding', 'async');
+      },
+    },
+  };
 }

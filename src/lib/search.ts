@@ -8,21 +8,23 @@
  * "파워비아이"로 찾는 사람과 "Power BI"로 찾는 사람이 같은 글에 닿아야 한다.
  * 검색해서 안 나오면 방문자는 글이 없다고 판단하고 떠난다.
  */
-export const ALIASES: Record<string, string> = {
-  'power bi': '파워비아이 파워bi powerbi',
-  fabric: '패브릭',
-  d365: 'dynamics 365 다이나믹스',
-  ontology: '온톨로지',
-};
+export const ALIAS_GROUPS = [
+  ['power bi', '파워비아이', '파워bi', 'powerbi'],
+  ['fabric', '패브릭'],
+  ['d365', 'dynamics 365', '다이나믹스'],
+  ['ontology', '온톨로지'],
+] as const;
 
 /** 주어진 글에서 걸리는 별칭들만 뽑아낸다 (원문은 포함하지 않는다) */
 export function aliasTerms(text: string): string {
   const lower = text.toLowerCase();
   const found: string[] = [];
-  for (const [term, extra] of Object.entries(ALIASES)) {
-    if (lower.includes(term)) found.push(extra);
+  for (const group of ALIAS_GROUPS) {
+    // 그룹 안의 어느 표기가 들어와도 나머지 표기를 모두 색인한다.
+    // 콘텐츠와 검색어의 표기가 어느 방향이든 같은 글에 닿게 하기 위함이다.
+    if (group.some((term) => lower.includes(term))) found.push(...group);
   }
-  return found.join(' ');
+  return [...new Set(found)].join(' ');
 }
 
 /** 노트 하나의 검색 대상 문자열을 만든다 (소문자, 별칭 확장 포함) */
@@ -59,6 +61,11 @@ export function snippet(text: string, tokens: string[], radius = 40): string | n
 /** 검색어를 공백 기준 토큰으로 쪼갠다 */
 export function tokenize(query: string): string[] {
   return query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+}
+
+/** 검색어와 같은 별칭 그룹의 표기를 강조·스니펫 탐색에도 사용한다. */
+export function expandTokens(tokens: string[]): string[] {
+  return [...new Set([...tokens, ...tokenize(aliasTerms(tokens.join(' ')))])];
 }
 
 /** 모든 토큰이 포함되어야 매칭 (AND). "fabric 온톨로지" 같은 질의를 위해 */

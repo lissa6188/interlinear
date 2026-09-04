@@ -12,8 +12,7 @@ const { note } = Astro.props;
 <article
   class="card"
   data-note
-  data-haystack={note.haystack}
-  data-body={note.bodyText}
+  data-href={note.href}
   data-date={note.isoDate}
   data-title={note.title}
 >

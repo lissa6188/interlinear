@@ -14,12 +14,15 @@ export const GET: APIRoute = ({ props }) => {
   const { note } = props as { note: Awaited<ReturnType<typeof getCollection<'blog'>>>[number] };
   const isoDate = note.data.date.toISOString().slice(0, 10);
   const updated = note.data.updated?.toISOString().slice(0, 10);
+  const cards = note.data.cards?.length
+    ? `\ncards:\n${note.data.cards.map((src) => `  - ${src}`).join('\n')}`
+    : '';
 
   const body = `---
 title: ${note.data.title}
 description: ${note.data.description}
 date: ${isoDate}${updated ? `\nupdated: ${updated}` : ''}
-tags: [${note.data.tags.join(', ')}]
+  tags: [${note.data.tags.join(', ')}]${cards}
 author: ${SITE.author}
 source: ${SITE.url}/notes/${note.id}/
 ---

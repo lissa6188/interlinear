@@ -6,6 +6,7 @@
 // 제목·날짜·태그·푸터 등 글의 틀은 노트 템플릿과 똑같이 유지한다.
 import TagList from '../TagList.astro';
 import VideoEmbed from '../VideoEmbed.astro';
+import CardGallery from '../CardGallery.astro';
 
 interface Props {
   title: string;
@@ -15,6 +16,7 @@ interface Props {
   minutes: number;
   tags: string[];
   video?: string;
+  cards?: string[];
   backHref: string;
   backLabel: string;
   contactEmail: string;
@@ -22,7 +24,7 @@ interface Props {
   rawBody: string;
 }
 
-const { title, description, isoDate, shortDate, minutes, tags, video, backHref, backLabel, contactEmail, rawBody } = Astro.props;
+const { title, description, isoDate, shortDate, minutes, tags, video, cards, backHref, backLabel, contactEmail, rawBody } = Astro.props;
 ---
 
 <main class="wrap" id="main">
@@ -38,6 +40,7 @@ const { title, description, isoDate, shortDate, minutes, tags, video, backHref, 
     </header>
 
     {video && <VideoEmbed src={video} title={`${title} 영상`} />}
+    {cards && <CardGallery images={cards} title={title} />}
 
     {/* 저자가 쓴 HTML 그대로. prose 를 얹어 두어 일반 문단·목록은 글 페이지와
         같은 활자로 나오고, 위젯은 저자의 style 이 이긴다 */}

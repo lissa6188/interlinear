@@ -2,16 +2,17 @@ import type { APIRoute } from 'astro';
 import { getAll } from '../lib/notes';
 import { SITE } from '../lib/site';
 import { escapeXml } from '../lib/xml';
+import { latestIso } from '../lib/dates';
 
 // @astrojs/sitemap 을 쓰지 않고 직접 만든다. 하는 일이 문자열 조립뿐이라
 // 의존성을 늘리는 것보다 이 파일 하나를 읽는 편이 유지보수가 싸다.
 export const GET: APIRoute = async () => {
   const notes = await getAll();
-  const today = notes[0]?.updatedIso ?? notes[0]?.isoDate;
+  const latestUpdate = latestIso(notes.map((note) => note.updatedIso));
 
   const urls = [
-    { loc: `${SITE.url}/`, lastmod: today, priority: '1.0' },
-    { loc: `${SITE.url}/notes/`, lastmod: today, priority: '0.9' },
+    { loc: `${SITE.url}/`, lastmod: latestUpdate, priority: '1.0' },
+    { loc: `${SITE.url}/notes/`, lastmod: latestUpdate, priority: '0.9' },
     { loc: `${SITE.url}/study/`, priority: '0.8' },
     { loc: `${SITE.url}/about/`, priority: '0.8' },
     ...notes.map((note) => ({

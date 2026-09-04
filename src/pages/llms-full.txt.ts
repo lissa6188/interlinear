@@ -18,12 +18,15 @@ export const GET: APIRoute = async () => {
   const documents = sorted
     .map(({ entry, base }) => {
       const isoDate = entry.data.date.toISOString().slice(0, 10);
+      const cards = 'cards' in entry.data && entry.data.cards?.length
+        ? `\n카드뉴스:\n${entry.data.cards.map((src) => `- ${SITE.url}${src}`).join('\n')}`
+        : '';
       return `# ${entry.data.title}
 
 출처: ${SITE.url}${base}/${entry.id}/
 발행: ${isoDate}
 태그: ${entry.data.tags.join(', ') || '없음'}
-요약: ${entry.data.description}
+요약: ${entry.data.description}${cards}
 
 ${normalizeCaptureLinks(entry.body ?? '')}`;
     })

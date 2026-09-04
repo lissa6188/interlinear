@@ -37,6 +37,8 @@ const blog = defineCollection({
     ...common,
     // 비우면 노트 페이지에서 "그 외"로 묶인다
     category: z.enum(CATEGORIES).optional(),
+    // 본문 위에 붙이는 카드뉴스. 적힌 순서대로 가로 스크롤 갤러리에 나온다.
+    cards: z.array(z.string()).min(1).optional(),
   }),
 });
 

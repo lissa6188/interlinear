@@ -1,6 +1,7 @@
 ---
 import TagList from './TagList.astro';
 import type { Note } from '../lib/notes';
+import { optimizedImageUrl } from '../lib/images';
 
 interface Props {
   note: Note;
@@ -16,7 +17,10 @@ const hasThumb = Boolean(note.thumbnail);
   {
     hasThumb ? (
       <a class="row-thumb" href={note.href} aria-hidden="true" tabindex="-1">
-        <img src={note.thumbnail} alt="" loading="lazy" decoding="async" />
+        <picture>
+          {optimizedImageUrl(note.thumbnail!) !== note.thumbnail && <source srcset={optimizedImageUrl(note.thumbnail!)} type="image/webp" />}
+          <img src={note.thumbnail} alt="" loading="lazy" decoding="async" />
+        </picture>
       </a>
     ) : (
       <time class="row-date mono" datetime={note.isoDate}>
