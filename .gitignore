@@ -33,3 +33,6 @@ PlanUpdate.md
 
 # 고양이 스프라이트 원본(시트·사진). 조립된 public/cat/*.webp 만 배포한다
 cat-src/
+
+# 정리 아카이브 — 미사용 목업·원본·로그·옛 에이전트 설정. 개인 정보(PlanUpdate.md) 포함이라 저장소에 올리지 않는다
+_archive/
