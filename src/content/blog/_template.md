@@ -5,6 +5,7 @@ date: 2026-01-01
 tags: [d365, sales]
 category: Dynamics 365 CRM
 # 카드뉴스가 없으면 cards 항목 전체를 지운다.
+# 카드 이미지 하단 연락처는 전체 이메일 hello@interlinear.work 로 넣는다 (도메인만 쓰지 않는다).
 cards:
   - /cards/글-슬러그/card-01.png
   - /cards/글-슬러그/card-02.png
